@@ -1,0 +1,78 @@
+<!--
+  Skeleton showing the class vocabulary defined in style_block.txt.
+  Copy style_block.txt verbatim into <head>, then build the body by
+  repeating these patterns per topic/section. Replace the <title> and
+  all placeholder copy. Image src values should be "__IMG__/<filename>"
+  until the final embed_images.py pass converts them to base64.
+-->
+<title>{{DOC_TITLE}}</title>
+
+{{STYLE_BLOCK}}
+
+<h1>{{DOC_TITLE}}</h1>
+<div class="subtitle">{{SOURCE_LABEL — e.g. "PennyLane Codebook — Module X: ..."}}</div>
+<div class="meta">출처: {{module URL}} &nbsp;·&nbsp; 정리 대상: {{topic 1}} · {{topic 2}} · ...</div>
+
+<div class="toc">
+<b>목차</b>
+<ul>
+<li>1. {{Topic 1 title}}</li>
+<li>2. {{Topic 2 title}}</li>
+</ul>
+</div>
+
+<p>{{1–2 paragraph intro: what this note covers, and that Theory-tab
+sub-sections were expanded and read in full.}}</p>
+
+<hr class="divider">
+
+<!-- ================= one <h2> block per source page/topic ================= -->
+<h2><span class="num">TOPIC 01</span> {{Topic title}}</h2>
+
+<div class="goalbox">
+<p>이 토픽에서 배우는 것 (What will you learn?)</p>
+<ul>
+  <li>{{learning objective 1, translated}}</li>
+  <li>{{learning objective 2}}</li>
+</ul>
+</div>
+
+<!-- one <h3> per Theory accordion sub-section -->
+<h3>{{n.1}} {{Sub-section title, translated}}</h3>
+<p>{{Faithful, detailed Korean explanation of this sub-section's prose.
+   Do not compress equations away — every $$...$$ block from the source
+   becomes a <div class="formula"> below at the point it occurs.}}</p>
+
+<div class="formula"><img src="__IMG__/{{hash}}.png"></div>
+
+<p>{{more prose...}}</p>
+
+<div class="figure">
+  <img src="__IMG__/{{diagram_basename}}.png" style="width:320px">
+  <div class="cap">{{Korean caption describing the diagram}}</div>
+</div>
+
+<!-- inline "Exercise I.x.y" boxes that appear WITHIN the theory prose
+     (conceptual checks with a <details><summary>Solution</summary> in the
+     source) get rendered as a matched exbox/solbox pair. Do NOT include
+     the separate hands-on Codercise tabs unless the user asked for those
+     too — this skill targets the Theory tab specifically. -->
+<div class="exbox">
+  <div class="extitle">Exercise {{I.x.y}}</div>
+  <p>{{exercise prompt, translated}}</p>
+  <div class="solbox">
+    <div class="soltitle">풀이</div>
+    <p>{{solution prose}}</p>
+    <div class="formula"><img src="__IMG__/{{hash}}.png"></div>
+  </div>
+</div>
+
+<hr class="divider">
+<!-- repeat <h2> block per topic -->
+
+<!-- optional closing summary table, if the module lends itself to one -->
+<h2>정리 요약표</h2>
+<table class="summary">
+<tr><th>{{col1}}</th><th>{{col2}}</th><th>{{col3}}</th></tr>
+<tr><td>{{...}}</td><td>{{...}}</td><td>{{...}}</td></tr>
+</table>
