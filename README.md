@@ -28,3 +28,9 @@ want it to stay in sync with `git pull`).
   with real rendered formula/diagram images) from PennyLane Codebook Theory
   tabs. See its `SKILL.md` for the pipeline and prerequisites (TeX Live,
   `librsvg`).
+- **[lecture-history-enrich](skills/lecture-history-enrich/)** — takes an
+  existing lecture-note HTML (e.g. one made by `pennylane-codebook-notes`)
+  and adds short "science history" episode boxes + portrait photos of the
+  people behind each concept, sourced from Wikipedia/Wikimedia Commons and
+  embedded as base64 images matching the note's existing design system.
+  Always writes a new file, never overwrites the original.

@@ -33,16 +33,23 @@ import subprocess
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEX_TEMPLATE = r"""\documentclass[preview,border=4pt,varwidth]{standalone}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,braket}
 \begin{document}
 %%BODY%%
 \end{document}
 """
 
 ENV_STARTERS = (
-    "\\begin{align", "\\begin{equation", "\\begin{gather", "\\begin{alignat",
-    "\\begin{eqnarray}", "\\begin{eqnarray*}", "\\begin{multline", "\\begin{flalign",
+    "\\begin{align}", "\\begin{align*}", "\\begin{equation}", "\\begin{equation*}",
+    "\\begin{gather}", "\\begin{gather*}", "\\begin{alignat}", "\\begin{alignat*}",
+    "\\begin{eqnarray}", "\\begin{eqnarray*}", "\\begin{multline}", "\\begin{multline*}",
+    "\\begin{flalign}", "\\begin{flalign*}",
 )
+# NOTE: these are full-word matches (with the closing brace), not prefixes --
+# "\begin{align" is a *substring* of "\begin{aligned}" too, but `aligned` is a
+# math-mode-only sub-environment (like `array`/`cases`/`matrix`) that must be
+# wrapped in \[...\] to start display math, unlike `align`/`equation`/etc.
+# which are standalone top-level environments that start math mode themselves.
 
 
 def check_tools():
@@ -63,7 +70,7 @@ def render_formula(body: str, out_dir: str) -> str:
     """Render one LaTeX body to <out_dir>/formulas/<hash>.png; return the
     filename (not path) of the PNG. Skips work if already cached."""
     body = body.strip()
-    body = re.sub(r"(\\end\{[a-zA-Z*]+\})[^\\]*\\tag\{[^}]*\}\s*$", r"\1", body)
+    body = re.sub(r"(\\end\{[a-zA-Z*]+\})[^\\]*\\tag\{[^}]*\}[.,;\s]*$", r"\1", body)
     key = hashlib.md5(body.encode()).hexdigest()[:16]
     formulas_dir = os.path.join(out_dir, "formulas")
     os.makedirs(formulas_dir, exist_ok=True)
