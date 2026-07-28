@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Find every `<img src="....svg">` referenced inside the theory/exercise
-markdown of one or more extract_theory.py JSON outputs, download the SVG,
-and rasterize it to a high-res white-background PNG (via rsvg-convert).
+Find every image referenced inside the theory/exercise markdown of one or
+more extract_theory.py JSON outputs -- both `<img src="....svg">` tags and
+plain markdown `![alt](....png)` images -- download it, and produce a
+high-res white-background PNG (via rsvg-convert for SVGs; raster formats
+like .png/.jpg are copied through as-is).
 
 Usage:
     python3 download_diagrams.py <output_dir> <page1.json> [<page2.json> ...]
@@ -12,7 +14,8 @@ Produces:
 
 Only theory-tab images are collected by default (codercise-only diagrams
 are usually not wanted in a Theory-tab lecture note); pass --include-exercises
-to also pull images that only appear inside exercise content.
+to also pull images that only appear inside exercise content (needed when
+also writing up Codercise solutions -- see SKILL.md's "확장 모드").
 """
 import re
 import os
@@ -34,13 +37,20 @@ def fetch_bytes(url: str) -> bytes:
     return resp.content
 
 
+IMG_URL_RE = re.compile(
+    r'src="([^"]+\.(?:svg|png|jpe?g))"'   # <img src="...">
+    r'|\]\(([^)]+\.(?:svg|png|jpe?g))\)'  # ![alt](...)
+)
+
+
 def collect_image_urls(data: dict, include_exercises: bool) -> set:
     urls = set()
-    for t in data.get("theories", []):
-        urls |= set(re.findall(r'src="([^"]+\.svg)"', t.get("content") or ""))
+    sections = list(data.get("theories", []))
     if include_exercises:
-        for e in data.get("exercises", []):
-            urls |= set(re.findall(r'src="([^"]+\.svg)"', e.get("content") or ""))
+        sections += list(data.get("exercises", []))
+    for s in sections:
+        for m in IMG_URL_RE.finditer(s.get("content") or ""):
+            urls.add(m.group(1) or m.group(2))
     return urls
 
 
@@ -62,17 +72,24 @@ if __name__ == "__main__":
         all_urls |= collect_image_urls(data, include_exercises)
 
     for url in sorted(all_urls):
-        base = os.path.splitext(os.path.basename(url))[0]
-        svg_path = os.path.join(diagrams_dir, base + ".svg")
+        base, ext = os.path.splitext(os.path.basename(url))
+        ext = ext.lower()
         png_path = os.path.join(diagrams_dir, base + ".png")
         if os.path.exists(png_path):
             print("cached", base + ".png")
             continue
         content = fetch_bytes(url)
-        with open(svg_path, "wb") as f:
-            f.write(content)
-        subprocess.run(
-            ["rsvg-convert", "-z", "3", "--background-color=white", "-o", png_path, svg_path],
-            check=True,
-        )
+        if ext == ".svg":
+            svg_path = os.path.join(diagrams_dir, base + ".svg")
+            with open(svg_path, "wb") as f:
+                f.write(content)
+            subprocess.run(
+                ["rsvg-convert", "-z", "3", "--background-color=white", "-o", png_path, svg_path],
+                check=True,
+            )
+        else:
+            # Raster formats (png/jpg) are already final -- just write them
+            # out under the normalized .png name expected by embed_images.py.
+            with open(png_path, "wb") as f:
+                f.write(content)
         print("downloaded+converted", base + ".png")
