@@ -1,5 +1,6 @@
 ---
 name: lecture-history-enrich
+
 description: >
   Enrich an existing Google-Docs-paste-ready lecture note HTML (e.g. one
   produced by pennylane-codebook-notes) with fun illustrations and short
