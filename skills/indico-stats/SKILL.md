@@ -64,8 +64,8 @@ https://<indico-host>/event/<event-id>/manage/
 
 ## 4. 통계 집계 → JSON
 
-수집한 값을 아래 스키마의 JSON으로 정리한다 (`examples/quark_matter_2027.json`이
-실제 작업 예시). 이 JSON을 `scripts/build_report.py`에 넘기면 HTML이 나온다.
+수집한 값을 아래 스키마의 JSON으로 정리한다. 이 JSON을 `scripts/build_report.py`에
+넘기면 HTML이 나온다.
 
 ```jsonc
 {
@@ -122,3 +122,11 @@ python3 scripts/build_report.py --input data.json --output report.html
 등록자 실명·소속·결제상태, 초록 발표자 소속 국가 등은 관리자 로그인으로만 보이는
 정보다. 결과 HTML을 온라인(Artifact 등)에 publish하기 전에는 반드시 사용자에게
 알리고 확인받는다 — 기본은 비공개라도 링크 공유 시 노출될 수 있기 때문이다.
+
+**이 스킬의 작업 과정에서 실제 등록자/초록 데이터가 담긴 예시 파일을
+`examples/`(또는 그 밖의 리포지토리 경로)에 절대 저장하지 않는다.** 통계 집계용
+JSON(`data.json` 등)과 결과 HTML은 항상 스크래치패드나 사용자가 명시적으로 지정한
+로컬 경로에만 만들고, 스킬 리포지토리 안에는 커밋하지 않는다. 예시나 템플릿이
+필요하면 실명·소속·이메일 등을 전부 가상의 값으로 바꾼 더미 데이터만 사용한다.
+과거에 실제 데이터가 담긴 예시 파일(`quark_matter_2027.json`)이 실수로 커밋되었다가
+git 히스토리까지 재작성해서 제거한 적이 있다 — 같은 실수를 반복하지 않는다.
