@@ -48,6 +48,14 @@ want it to stay in sync with `git pull`).
   methodology, synthesizing findings. Auto-synced every morning by
   `scripts/update-academic-search.sh`; to update by hand just re-run that
   script.
+- **[indico-stats](skills/indico-stats/)** — pulls registration and
+  abstract-submission stats from an Indico event's admin/manager pages
+  (country, affiliation, position type, track, Theory/Experiment category —
+  fields only visible after logging in, not on the public event page) and
+  renders an HTML dashboard via `scripts/build_report.py` (stdlib only, no
+  deps). `SKILL.md` documents the browser-automation collection steps and
+  the JSON schema the script consumes; `examples/quark_matter_2027.json` is
+  a real worked example.
 
 ## Auto-updating third-party skills
 
