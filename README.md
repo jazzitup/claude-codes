@@ -56,6 +56,13 @@ want it to stay in sync with `git pull`).
   deps). `SKILL.md` documents the browser-automation collection steps and
   the JSON schema the script consumes; `examples/quark_matter_2027.json` is
   a real worked example.
+- **[evernote-weekly-todo](skills/evernote-weekly-todo/)** — creates the next
+  week's note in a recurring Evernote "weekly todo" series (titled like
+  `June 4`, `July 3`, `August 2`) by copying the table structure from a
+  dedicated template note (`attributes.isTemplate: true`) and filling in
+  that week's Sun–Sat dates. No personal note content, links, or GUIDs are
+  hardcoded in `SKILL.md` — everything is read live from the user's own
+  Evernote via `get_note` each time.
 
 ## Auto-updating third-party skills
 
