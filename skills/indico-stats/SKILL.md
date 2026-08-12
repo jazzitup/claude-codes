@@ -100,15 +100,37 @@ https://<indico-host>/event/<event-id>/manage/
     "venue": "장소", "indico_url": "https://indico.cern.ch/event/<id>/manage/",
     "as_of": "2026-07-31"
   },
+  // 선택: 직전 리포트가 있으면 채운다 (3-1절 참고). 없으면 이 키 자체를 생략.
+  "comparison": {
+    "as_of": "2026-08-02",
+    "registration": {"active_count": 12},
+    "abstracts": {
+      "total": 8,
+      "by_track": {"Jets": 1, "Collective Dynamics": 2}
+    },
+    "note": "자유 텍스트로 사람이 읽을 요약(신규 초록 소속/트랙 등 스크립트가 못 셈하는 부분)",
+    "new_abstracts": [
+      {"id": "#14", "title": "...", "track": "Jets", "category": "Theory",
+       "country": "China", "type": "Contributed Oral", "state": "Awaiting Review"}
+    ]
+  },
   "registration": {
     "active_count": 11, "total_submitted": 12,
     "by_state": {"Awaiting payment": 10, "Completed": 1, "Withdrawn": 1},
     "by_country": {"South Korea": 3, "China": 3},
     "by_position": {"Faculty": 7, "Staff": 2, "Student": 2},
+    // 선택: 등록자 중 초록 제출자와 이름이 매칭되는 사람만 Theory/Experiment 표시
+    "crossref": [
+      {"reg_id": "#13", "name": "Xun Chen", "abstract_id": "#8", "category": "Theory"}
+    ],
+    "crossref_unmatched_note": "나머지 등록자는 초록 미제출/이름 불일치로 분류 불가.",
     "roster": [
       {"id": "#9", "name": "In Kwon Yoo", "affiliation": "Pusan National University (KR)",
        "country": "South Korea", "position": "Faculty", "date": "2026-06-20",
-       "state": "Awaiting payment"}
+       "state": "Awaiting payment"},
+      {"id": "#10", "name": "Yongsun Kim", "affiliation": "Sejong University",
+       "country": "South Korea", "position": "Faculty", "date": "2026-06-21",
+       "state": "Withdrawn", "duplicate_note": "중복, #11과 동일인"}
     ]
   },
   "abstracts": {
@@ -128,7 +150,8 @@ https://<indico-host>/event/<event-id>/manage/
 
 `by_state` / `by_country` / `by_position` / `by_track` / `by_category`는 순서가
 곧 막대그래프 순서가 된다(값 큰 순으로 미리 정렬해서 넣을 것 — 스크립트는 재정렬하지
-않는다).
+않는다). `comparison`, `crossref`, `duplicate_note`는 모두 선택 필드이며 없으면 해당
+섹션 자체가 렌더링되지 않는다.
 
 ## 5. HTML 생성
 
