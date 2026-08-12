@@ -308,6 +308,9 @@ def build(data):
 
     parts = [tiles]
 
+    if data.get("comparison"):
+        parts.append(comparison_card(data["comparison"], reg, ab))
+
     if reg.get("by_state"):
         parts.append(f"""<div class="card"><h2>등록 상태 분포 <span class="asof">{esc(ev.get('as_of',''))} 기준</span></h2>{bar_group(reg['by_state'])}</div>""")
 
