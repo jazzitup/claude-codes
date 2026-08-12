@@ -148,10 +148,13 @@ def registration_table(roster, redact_emails=True):
     header = "".join(f"<th>{esc(c)}</th>" for c in cols)
     rows = []
     for r in roster:
+        name = esc(r.get('name',''))
+        if r.get('duplicate_note'):
+            name += f' <span class="pill muted">{esc(r["duplicate_note"])}</span>'
         rows.append(
             "<tr>"
             f"<td>{esc(r.get('id',''))}</td>"
-            f"<td>{esc(r.get('name',''))}</td>"
+            f"<td>{name}</td>"
             f"<td>{esc(r.get('affiliation',''))}</td>"
             f"<td>{esc(r.get('country',''))}</td>"
             f"<td>{esc(r.get('position',''))}</td>"
@@ -160,6 +163,98 @@ def registration_table(roster, redact_emails=True):
             "</tr>"
         )
     return f'<div class="table-scroll"><table><thead><tr>{header}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+
+
+def comparison_card(cmp, reg, ab):
+    prev_as_of = esc(cmp.get("as_of", "이전 리포트"))
+    prev_reg = cmp.get("registration", {}) or {}
+    prev_ab = cmp.get("abstracts", {}) or {}
+
+    tiles = []
+    if "active_count" in prev_reg:
+        cur = reg.get("active_count", 0)
+        prev = prev_reg["active_count"]
+        delta = cur - prev
+        sign = "+" if delta > 0 else ("±0" if delta == 0 else "")
+        color = "var(--good)" if delta > 0 else ("var(--text-primary)" if delta == 0 else "var(--warning)")
+        tiles.append(f"""
+      <div class="tile">
+        <div class="value" style="color:{color};">{sign if delta==0 else f"{sign}{delta}"}</div>
+        <div class="label">등록 인원 (활성)</div>
+        <div class="sub">{prev}건 → {cur}건</div>
+      </div>""")
+    if "total" in prev_ab:
+        cur = ab.get("total", 0)
+        prev = prev_ab["total"]
+        delta = cur - prev
+        sign = "+" if delta > 0 else ("±0" if delta == 0 else "")
+        color = "var(--good)" if delta > 0 else ("var(--text-primary)" if delta == 0 else "var(--warning)")
+        tiles.append(f"""
+      <div class="tile">
+        <div class="value" style="color:{color};">{sign if delta==0 else f"{sign}{delta}"}</div>
+        <div class="label">제출된 초록</div>
+        <div class="sub">{prev}건 → {cur}건</div>
+      </div>""")
+
+    track_rows = ""
+    prev_track = prev_ab.get("by_track")
+    if prev_track:
+        cur_track = ab.get("by_track", {})
+        labels = list(dict.fromkeys(list(prev_track.keys()) + list(cur_track.keys())))
+        rows = []
+        for label in labels:
+            p, c = prev_track.get(label, 0), cur_track.get(label, 0)
+            if p == c:
+                continue
+            d = c - p
+            rows.append(f"<tr><td>{esc(label)}</td><td>{p}</td><td>{c}</td><td>{'+' if d>0 else ''}{d}</td></tr>")
+        if rows:
+            track_rows = (
+                '<div class="table-scroll" style="margin-top:14px;"><table>'
+                "<thead><tr><th>트랙</th><th>이전</th><th>현재</th><th>변화</th></tr></thead>"
+                f"<tbody>{''.join(rows)}</tbody></table></div>"
+            )
+
+    new_items = cmp.get("new_abstracts") or []
+    new_table = ""
+    if new_items:
+        new_table = (
+            '<h2 style="margin-top:22px; font-size:0.95rem;">신규 제출 초록</h2>'
+            + abstract_table(new_items)
+        )
+
+    note = f'<p style="color:var(--text-secondary); font-size:0.85rem; margin:16px 0 0;">{esc(cmp["note"])}</p>' if cmp.get("note") else ""
+
+    return (
+        f'<div class="card"><h2>지난 리포트({prev_as_of}) 대비 변화</h2>'
+        f'<div class="tiles" style="margin-bottom:0;">{"".join(tiles)}</div>'
+        f"{track_rows}{note}{new_table}</div>"
+    )
+
+
+def crossref_card(crossref, unmatched_note):
+    rows = []
+    for c in crossref:
+        rows.append(
+            "<tr>"
+            f"<td>{esc(c.get('reg_id',''))}</td>"
+            f"<td>{esc(c.get('name',''))}</td>"
+            f"<td>{esc(c.get('abstract_id',''))}</td>"
+            f"<td>{esc(c.get('category',''))}</td>"
+            "</tr>"
+        )
+    table = (
+        '<div class="table-scroll"><table><thead><tr><th>등록 ID</th><th>이름</th><th>대조된 초록</th><th>카테고리</th></tr></thead>'
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
+    )
+    note = f'<p style="color:var(--text-secondary); font-size:0.85rem; margin:12px 0 0;">{esc(unmatched_note)}</p>' if unmatched_note else ""
+    return (
+        '<div class="card"><h2>등록자 Theory / Experiment</h2>'
+        '<p style="color:var(--text-secondary); font-size:0.85rem; margin:0 0 12px;">'
+        "등록 양식 자체에는 Theory/Experiment 구분 필드가 없음. 초록 제출자 이름을 대조한 결과만 표시하며, "
+        "나머지는 초록 미제출/이름 불일치로 분류 불가(추정하지 않음).</p>"
+        f"{table}{note}</div>"
+    )
 
 
 def abstract_table(items):
