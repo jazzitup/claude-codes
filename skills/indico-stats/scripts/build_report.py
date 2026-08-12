@@ -329,6 +329,9 @@ def build(data):
             f'<div style="margin-top:16px;">{pct_table(ab["by_track"], total_ab)}</div></div>'
         )
 
+    if reg.get("crossref"):
+        parts.append(crossref_card(reg["crossref"], reg.get("crossref_unmatched_note", "")))
+
     if reg.get("roster"):
         parts.append(f'<div class="card"><h2>등록자 명단 (ID 순)</h2>{registration_table(reg["roster"], redact)}</div>')
 
