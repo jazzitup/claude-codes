@@ -235,10 +235,13 @@ def main():
 
     for i in range(0, total, args.batch_size):
         batch = all_files[i:i + args.batch_size]
+        print(f"CURRENT_BATCH: reading metadata for {len(batch)} files "
+              f"({i+1}-{i+len(batch)}/{total})", flush=True)
         meta_by_file = run_exiftool_batch(batch)
         for fp in batch:
             dest = None
             try:
+                print(f"CURRENT_FILE: {fp}", flush=True)
                 meta = meta_by_file.get(fp, {})
                 ext = fp.rsplit(".", 1)[-1].lower()
                 kind = "photo" if ext in PHOTO_EXT else "video"
