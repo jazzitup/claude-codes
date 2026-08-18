@@ -181,11 +181,15 @@ def main():
     processed = 0
     skipped_dupe = 0
     errors = 0
+    failed_path = dest_base / ".photo_backup_failed.tsv"
+
+    signal.signal(signal.SIGALRM, _timeout_handler)
 
     for i in range(0, total, args.batch_size):
         batch = all_files[i:i + args.batch_size]
         meta_by_file = run_exiftool_batch(batch)
         for fp in batch:
+            dest = None
             try:
                 meta = meta_by_file.get(fp, {})
                 ext = fp.rsplit(".", 1)[-1].lower()
@@ -199,7 +203,12 @@ def main():
                 else:
                     dest = unique_dest(videos_dir, os.path.basename(fp))
 
-                digest = sha256_copy(fp, dest)
+                signal.alarm(PER_FILE_TIMEOUT_SECONDS)
+                try:
+                    digest = sha256_copy(fp, dest)
+                finally:
+                    signal.alarm(0)
+
                 if digest in seen:
                     os.remove(dest)
                     skipped_dupe += 1
@@ -212,9 +221,24 @@ def main():
                     make_alias(str(dest), month_dir, dest.name)
 
                 processed += 1
+            except FileTimeout:
+                errors += 1
+                if dest is not None and dest.exists():
+                    os.remove(dest)
+                print(f"TIMEOUT (>{PER_FILE_TIMEOUT_SECONDS}s, likely stalled cloud download) on {fp}",
+                      file=sys.stderr, flush=True)
+                with open(failed_path, "a") as f:
+                    f.write(f"{fp}\ttimeout\n")
             except Exception as e:
                 errors += 1
+                if dest is not None and dest.exists():
+                    try:
+                        os.remove(dest)
+                    except OSError:
+                        pass
                 print(f"ERROR on {fp}: {e}", file=sys.stderr, flush=True)
+                with open(failed_path, "a") as f:
+                    f.write(f"{fp}\t{e}\n")
         print(f"progress: {min(i + args.batch_size, total)}/{total} "
               f"processed={processed} dupes={skipped_dupe} errors={errors}", flush=True)
 
