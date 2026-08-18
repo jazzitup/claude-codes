@@ -115,6 +115,71 @@ Notes for whoever (human or Claude) invokes this:
     large to safely materialize all at once and have the user back it up
     separately by hand.
 - Pair every run with a disk-space watchdog on the internal drive (kill the
-  backup process if free space drops below a safety floor, e.g. 15GB) since
-  cloud placeholder files get materialized locally as they're read and nothing
-  automatically evicts them afterward.
+  backup process if free space drops below a safety floor — ask the user for
+  a threshold, default discussed with this user was 50GB) since cloud
+  placeholder files get materialized locally as they're read and nothing
+  automatically evicts them afterward. Unless the user says otherwise, on
+  trigger just **kill and stop** — do not auto-restart a run that was killed
+  for being low on disk space, that just refills the disk again.
+- Keep the Mac awake for the duration of a long unattended run:
+  `caffeinate -dims &` (prevents display/idle/system sleep and disk idle).
+  Kill it once the whole backup (all sources) is done. If the user also asked
+  to change their actual sleep-timer settings, that's unrelated and separate
+  (`pmset`), don't conflate the two.
+
+## Excluding folders mid-run (the common real workflow)
+
+In practice the user will spot-check `CURRENT_FILE:` log lines while a run is
+in progress and periodically say "exclude that folder too" (too large,
+turns out to be presentation slides / paper figures / notes-app exports, not
+actual photos, etc). Each time this happens:
+
+1. Search the WHOLE tree for other folders matching the same pattern, not
+   just the one exact path the user named — case-insensitive, and check for
+   near-duplicates at different nesting levels: `find "$SOURCE" -iname
+   "*keyword*" -type d`. Folders often get duplicated/nested by the user over
+   the years (e.g. a top-level "My transparencies" AND several differently-
+   named "My transparences <event>" folders scattered under an "old stuff"
+   folder several levels down) — find all of them in one pass instead of
+   waiting for the user to spot each one individually.
+2. Stop the running process.
+3. Remove anything already backed up from those folders: filter
+   `.photo_backup_manifest.tsv` for rows whose source path (NFC-normalized)
+   starts with one of the excluded paths, delete the corresponding dest file
+   (and its `videos/` alias if it's a video) for each removed row, then
+   rewrite the manifest without those rows. Don't just add the exclude flag
+   going forward and leave stale already-copied files sitting in `visual
+   memory/` — the user is excluding the folder because they don't want it
+   there at all.
+4. Restart with the full accumulated `--exclude` list (every folder excluded
+   so far, not just the newest one).
+5. If a cron-based auto-recovery job is running (see below), update its
+   restart command to the new full exclude list too, or it'll resurrect the
+   just-removed content on its next stall recovery.
+
+## Long unattended runs: cron-based stall watch + auto-recovery
+
+For a run expected to take hours, don't just fire-and-forget it — set up a
+recurring check (CronCreate, e.g. every 10–60 min depending on how closely
+the user wants it watched) that:
+
+1. Compares the log's last `CURRENT_FILE:`/`progress:` lines against values
+   saved from the previous check (a small state file, e.g.
+   `.last_check_state.txt` at the root of `visual memory/`). If neither
+   changed since last check, the script's own internal timeouts (which
+   should self-heal any single stuck file within ~2 minutes) have failed to
+   recover it — auto-recover by killing and restarting the process with the
+   same source/dest/exclude args.
+2. Checks disk free space and stops (per the threshold above) before
+   reporting, if it's over the limit.
+3. Starts the next source's pass automatically once the current one logs
+   `DONE source=...` (e.g. Google Drive after Dropbox finishes).
+4. Updates the state file with the latest values for the next comparison.
+5. Reports a short status update to the user in their language.
+
+This orchestration-level stall check is a *different* safety net from the
+script's own internal per-file stall timeouts — it catches the case where
+the whole Python process itself wedges (observed once: a process sat idle in
+a kernel `select()` call with zero child processes and zero progress for
+10+ minutes, for reasons that were never fully identified). Don't skip it
+just because the script has its own internal timeouts.
