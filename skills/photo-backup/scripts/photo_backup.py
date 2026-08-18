@@ -12,6 +12,7 @@ import csv
 import datetime
 import hashlib
 import json
+import unicodedata
 import os
 import re
 import subprocess
