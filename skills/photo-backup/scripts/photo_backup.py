@@ -14,10 +14,21 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+PER_FILE_TIMEOUT_SECONDS = 180
+
+
+class FileTimeout(Exception):
+    pass
+
+
+def _timeout_handler(signum, frame):
+    raise FileTimeout()
 
 PHOTO_EXT = {"jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "gif", "bmp",
              "raw", "cr2", "cr3", "nef", "arw", "dng", "webp"}
