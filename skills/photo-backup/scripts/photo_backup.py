@@ -201,7 +201,10 @@ def main():
     dest_base = Path(args.dest_base)
     videos_dir = dest_base / "videos"
     manifest_path = dest_base / ".photo_backup_manifest.tsv"
-    excludes = [os.path.normpath(e) for e in args.exclude]
+    def norm(p):
+        return unicodedata.normalize("NFC", os.path.normpath(p))
+
+    excludes = [norm(e) for e in args.exclude]
 
     dest_base.mkdir(parents=True, exist_ok=True)
     seen = load_manifest(manifest_path)
@@ -212,8 +215,8 @@ def main():
     all_files = []
     for root, dirs, files in os.walk(source):
         dirs[:] = [d for d in dirs if not d.startswith(".")
-                   and os.path.normpath(os.path.join(root, d)) not in excludes]
-        if any(os.path.normpath(root) == e or os.path.normpath(root).startswith(e + os.sep) for e in excludes):
+                   and norm(os.path.join(root, d)) not in excludes]
+        if any(norm(root) == e or norm(root).startswith(e + os.sep) for e in excludes):
             continue
         for fn in files:
             if fn.startswith("."):
