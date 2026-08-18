@@ -80,6 +80,20 @@ Notes for whoever (human or Claude) invokes this:
   appended to `.photo_backup_failed.tsv` (`source_path\treason`) at the root
   of `visual memory/` — check this file after a run for anything that needs
   manual follow-up.
+- The exiftool metadata batch read is ALSO manually polled with a hard kill
+  (`EXIFTOOL_TIMEOUT_SECONDS`, 120s) instead of relying on
+  `subprocess.run(timeout=...)` — that flat timeout was empirically observed
+  to sometimes not fire at all (a batch sat blocked in `select()` for 10+
+  minutes past its 180s timeout with nothing in the log and no child process
+  visible). Don't reintroduce a bare `subprocess.run(timeout=...)` for
+  anything long-running in this script; always use a Popen + manual
+  poll-and-kill loop instead.
+- Every file the script touches is logged immediately and unbuffered:
+  `CURRENT_BATCH: reading metadata for N files (i-j/total)` before each
+  exiftool call, and `CURRENT_FILE: <path>` right before each copy attempt.
+  This is what makes "what file is it on right now / is it actually stuck"
+  answerable by just tailing the log — don't remove this logging even though
+  it makes the log verbose.
 - **Cloud "online-only" reversion is NOT automatable.** After copying a file
   that was a cloud placeholder, macOS/Dropbox provide no safe scriptable way
   to evict it back to online-only and free local disk space:
