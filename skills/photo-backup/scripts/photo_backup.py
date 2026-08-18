@@ -239,11 +239,7 @@ def main():
                 else:
                     dest = unique_dest(videos_dir, os.path.basename(fp))
 
-                signal.alarm(PER_FILE_TIMEOUT_SECONDS)
-                try:
-                    digest = sha256_copy(fp, dest)
-                finally:
-                    signal.alarm(0)
+                digest = copy_with_stall_detection(fp, dest)
 
                 if digest in seen:
                     os.remove(dest)
