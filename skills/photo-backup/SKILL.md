@@ -50,6 +50,23 @@ python3 ~/.claude/skills/photo-backup/scripts/photo_backup.py \
   --dest-base "/Volumes/<drive name>/visual memory"
 ```
 
+### Preferred mode: curated top-level folder list, not whole-tree + exclude
+
+The first real run of this skill scanned the entire Dropbox root with a
+growing `--exclude` list, and it took many rounds of "oh also exclude that
+folder" (research papers, presentation slides, notes-app exports, personal
+admin documents) before it was only touching real photo/video folders — each
+round meaning stop, find-and-clean already-copied stale content, restart.
+
+**Ask the user up front which top-level folders under Dropbox/Google Drive
+actually contain photos/videos** (e.g. "visual memories dropbox", "카톡사진
+2024-", "pictures") rather than defaulting to scanning everything. Then run
+the script once per named top-level folder (same `--dest-base`, so the
+shared manifest dedupes across all of them), e.g. via a small wrapper that
+loops `--source` over the list sequentially and writes to one shared log.
+This is far less churn than whole-tree-with-excludes, and is what the user
+settled on after living through the exclude-list approach once.
+
 Notes for whoever (human or Claude) invokes this:
 
 - Confirm the external drive is mounted (`ls /Volumes`) and writable before
