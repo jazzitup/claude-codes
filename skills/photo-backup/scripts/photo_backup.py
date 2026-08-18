@@ -221,8 +221,6 @@ def main():
     errors = 0
     failed_path = dest_base / ".photo_backup_failed.tsv"
 
-    signal.signal(signal.SIGALRM, _timeout_handler)
-
     for i in range(0, total, args.batch_size):
         batch = all_files[i:i + args.batch_size]
         meta_by_file = run_exiftool_batch(batch)
