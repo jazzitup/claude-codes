@@ -253,14 +253,13 @@ def main():
                     make_alias(str(dest), month_dir, dest.name)
 
                 processed += 1
-            except FileTimeout:
+            except FileTimeout as e:
                 errors += 1
                 if dest is not None and dest.exists():
                     os.remove(dest)
-                print(f"TIMEOUT (>{PER_FILE_TIMEOUT_SECONDS}s, likely stalled cloud download) on {fp}",
-                      file=sys.stderr, flush=True)
+                print(f"TIMEOUT on {fp}: {e}", file=sys.stderr, flush=True)
                 with open(failed_path, "a") as f:
-                    f.write(f"{fp}\ttimeout\n")
+                    f.write(f"{fp}\ttimeout: {e}\n")
             except Exception as e:
                 errors += 1
                 if dest is not None and dest.exists():
