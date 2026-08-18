@@ -36,22 +36,50 @@ VIDEO_EXT = {"mp4", "mov", "m4v", "avi", "mkv", "wmv", "3gp", "mts", "m2ts"}
 DATE_TAGS = ["DateTimeOriginal", "CreateDate", "MediaCreateDate", "TrackCreateDate", "FileModifyDate"]
 
 
+EXIFTOOL_TIMEOUT_SECONDS = 120
+
+
 def run_exiftool_batch(paths):
+    # Uses a manually-polled Popen (output redirected to a real file, not a
+    # PIPE) + hard kill on timeout, instead of subprocess.run(timeout=...) —
+    # in practice that flat timeout was observed to not reliably fire here
+    # (process stuck >10min past its 180s timeout with no error surfaced).
     if not paths:
         return {}
     with tempfile.NamedTemporaryFile("w", suffix=".args", delete=False) as f:
         for p in paths:
             f.write(p + "\n")
         argfile = f.name
+    outfile = argfile + ".out"
     cmd = ["exiftool", "-j", "-q", "-m"] + [f"-{t}" for t in DATE_TAGS] + ["-@", argfile]
+    data = []
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
-        data = json.loads(out.stdout) if out.stdout.strip() else []
+        with open(outfile, "wb") as out_f:
+            proc = subprocess.Popen(cmd, stdout=out_f, stderr=subprocess.DEVNULL)
+            start = time.time()
+            while True:
+                ret = proc.poll()
+                if ret is not None:
+                    break
+                if time.time() - start > EXIFTOOL_TIMEOUT_SECONDS:
+                    print(f"exiftool batch TIMEOUT after {EXIFTOOL_TIMEOUT_SECONDS}s "
+                          f"(killing, will fall back to file-mtime dates for this batch)",
+                          file=sys.stderr, flush=True)
+                    proc.kill()
+                    proc.wait()
+                    break
+                time.sleep(2)
+        with open(outfile, "r") as f:
+            content = f.read()
+        if content.strip():
+            data = json.loads(content)
     except Exception as e:
         print(f"exiftool batch failed: {e}", file=sys.stderr, flush=True)
         data = []
     finally:
         os.unlink(argfile)
+        if os.path.exists(outfile):
+            os.unlink(outfile)
     return {m.get("SourceFile"): m for m in data}
 
 
