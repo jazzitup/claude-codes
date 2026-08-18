@@ -66,3 +66,41 @@ Notes for whoever (human or Claude) invokes this:
 - If a file with the exact same content (by sha256) was already backed up
   under a different name/location, it is skipped and counted as a "dupe" —
   this is expected, not an error.
+- `--exclude <path>` (repeatable) skips a whole subtree entirely — use it for
+  a folder the user wants to handle separately (too large, needs manual
+  attention, etc). Pass the path exactly as the user names it; the script
+  NFC-normalizes both the exclude arg and the walked paths internally, so
+  Korean/Unicode folder names match correctly even though macOS/Dropbox
+  return filenames in NFD form.
+- Per-file copies use a *stall*-based timeout (`copy_with_stall_detection`):
+  a file only fails if its destination stops **growing** for
+  `STALL_TIMEOUT_SECONDS` (120s) — a slow-but-progressing large download is
+  never killed, only a genuinely stuck one. There's also an absolute
+  `MAX_COPY_SECONDS` safety cap (2h). Failures (timeout or other errors) are
+  appended to `.photo_backup_failed.tsv` (`source_path\treason`) at the root
+  of `visual memory/` — check this file after a run for anything that needs
+  manual follow-up.
+- **Cloud "online-only" reversion is NOT automatable.** After copying a file
+  that was a cloud placeholder, macOS/Dropbox provide no safe scriptable way
+  to evict it back to online-only and free local disk space:
+  - Finder's own contextual-menu "Make Online-Only" cannot be reliably
+    triggered via AppleScript/System Events UI scripting on current macOS
+    (Finder's rewrite broke `AXShowMenu`/control-click simulation for
+    Finder-Sync-extension menu items), even with Accessibility permission
+    granted.
+  - The legacy `dropbox.py` / `~/.dropbox/command_socket` CLI does not work
+    with the modern File-Provider-based Dropbox client ("Dropbox isn't
+    running!" even while it is).
+  - The real public API for this, `NSFileProviderManager.evictItem`, refuses
+    to run ("The application cannot be used right now") from a script or an
+    ad-hoc-signed helper app — it requires a properly Apple-Developer-signed
+    app.
+  - **Conclusion**: if local disk space is a concern, either (a) let the
+    watchdog below guard against filling the disk and revert to online-only
+    manually via Finder afterward, or (b) `--exclude` any single folder too
+    large to safely materialize all at once and have the user back it up
+    separately by hand.
+- Pair every run with a disk-space watchdog on the internal drive (kill the
+  backup process if free space drops below a safety floor, e.g. 15GB) since
+  cloud placeholder files get materialized locally as they're read and nothing
+  automatically evicts them afterward.
