@@ -77,16 +77,56 @@ def get_date_bucket(meta, filepath):
     return dt.year, dt.month
 
 
-def sha256_copy(src, dst):
+def sha256_file(path):
     h = hashlib.sha256()
-    with open(src, "rb") as fi, open(dst, "wb") as fo:
+    with open(path, "rb") as f:
         while True:
-            chunk = fi.read(1024 * 1024)
+            chunk = f.read(1024 * 1024)
             if not chunk:
                 break
             h.update(chunk)
-            fo.write(chunk)
     return h.hexdigest()
+
+
+def copy_with_stall_detection(src, dst):
+    """Copy via `cp` in a subprocess; abort only if dst stops GROWING for
+    STALL_TIMEOUT_SECONDS (a genuinely stalled cloud download), not just if
+    it's slow. Large-but-progressing downloads are allowed up to
+    MAX_COPY_SECONDS as an absolute safety cap. Returns sha256 of dst."""
+    proc = subprocess.Popen(["cp", src, str(dst)])
+    last_size = -1
+    last_growth = time.time()
+    start = time.time()
+    try:
+        while True:
+            ret = proc.poll()
+            if ret is not None:
+                if ret != 0:
+                    raise RuntimeError(f"cp exited with code {ret}")
+                break
+            time.sleep(POLL_INTERVAL_SECONDS)
+            try:
+                cur_size = dst.stat().st_size
+            except FileNotFoundError:
+                cur_size = 0
+            now = time.time()
+            if cur_size > last_size:
+                last_size = cur_size
+                last_growth = now
+            elif now - last_growth > STALL_TIMEOUT_SECONDS:
+                proc.kill()
+                proc.wait()
+                raise FileTimeout(f"stalled: no growth for {STALL_TIMEOUT_SECONDS}s at {cur_size} bytes")
+            if now - start > MAX_COPY_SECONDS:
+                proc.kill()
+                proc.wait()
+                raise FileTimeout(f"exceeded max {MAX_COPY_SECONDS}s (size={cur_size})")
+    except BaseException:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+        raise
+    return sha256_file(dst)
 
 
 def unique_dest(dest_dir, filename):
