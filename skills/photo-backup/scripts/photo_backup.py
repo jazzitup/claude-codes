@@ -192,20 +192,28 @@ def main():
     ap.add_argument("--source", required=True, help="Source folder to scan (Dropbox / Google Drive root)")
     ap.add_argument("--dest-base", required=True, help='Destination "visual memory" folder on external drive')
     ap.add_argument("--batch-size", type=int, default=150)
+    ap.add_argument("--exclude", action="append", default=[],
+                     help="Absolute path to skip entirely (repeatable). Anything under it is not scanned.")
     args = ap.parse_args()
 
     source = Path(args.source)
     dest_base = Path(args.dest_base)
     videos_dir = dest_base / "videos"
     manifest_path = dest_base / ".photo_backup_manifest.tsv"
+    excludes = [os.path.normpath(e) for e in args.exclude]
 
     dest_base.mkdir(parents=True, exist_ok=True)
     seen = load_manifest(manifest_path)
     print(f"Loaded manifest: {len(seen)} files already backed up", flush=True)
+    if excludes:
+        print(f"Excluding: {excludes}", flush=True)
 
     all_files = []
     for root, dirs, files in os.walk(source):
-        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        dirs[:] = [d for d in dirs if not d.startswith(".")
+                   and os.path.normpath(os.path.join(root, d)) not in excludes]
+        if any(os.path.normpath(root) == e or os.path.normpath(root).startswith(e + os.sep) for e in excludes):
+            continue
         for fn in files:
             if fn.startswith("."):
                 continue
