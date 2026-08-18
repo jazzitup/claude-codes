@@ -46,7 +46,7 @@ def run_exiftool_batch(paths):
         argfile = f.name
     cmd = ["exiftool", "-j", "-q", "-m"] + [f"-{t}" for t in DATE_TAGS] + ["-@", argfile]
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
         data = json.loads(out.stdout) if out.stdout.strip() else []
     except Exception as e:
         print(f"exiftool batch failed: {e}", file=sys.stderr, flush=True)
