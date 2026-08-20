@@ -33,8 +33,9 @@ identifiable at a glance in Finder without opening each one.
    ```bash
    sips -s format png "<source>" --out "<same-dir>/<금액>원_<YYYY.MM.DD>.png"
    ```
-5. Delete the original source file after the PNG is confirmed written —
-   this is a rename+convert, not a copy, unless the user says otherwise.
+5. Keep the original source file by default (this is a convert, not a
+   move) — only delete it if the user explicitly says to. Confirmed with
+   this user: leave originals in place unless told otherwise.
 6. If the target filename already exists (e.g. two receipts same amount same
    day), append `-2`, `-3`, ... before `.png` rather than overwriting.
 
