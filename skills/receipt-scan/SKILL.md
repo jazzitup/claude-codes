@@ -29,9 +29,15 @@ identifiable at a glance in Finder without opening each one.
    `15,800원`), date zero-padded with dots (e.g. `2026.07.30`). Match this
    exact format even if the user's phrasing varies slightly — confirm the
    format with the user if they give a different example than this.
-4. Convert the original directly to that final path:
+4. Convert the original directly to that final path, then downsample so the
+   PNG lands around ~2MB (a full-res iPhone photo converts to an oversized
+   12–14MB PNG since PNG is lossless — the fix is resolution, not a quality
+   knob). `-Z 1600` (longest side 1600px) reliably lands in the 2.3–2.9MB
+   range for a typical receipt photo; adjust the width up/down and re-check
+   the resulting file size if a given receipt lands far from ~2MB:
    ```bash
    sips -s format png "<source>" --out "<same-dir>/<금액>원_<YYYY.MM.DD>.png"
+   sips -Z 1600 "<same-dir>/<금액>원_<YYYY.MM.DD>.png"
    ```
 5. Keep the original source file by default (this is a convert, not a
    move) — only delete it if the user explicitly says to. Confirmed with
