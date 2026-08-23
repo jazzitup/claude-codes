@@ -145,8 +145,14 @@ routine, 이름 "Evernote weekly-todo Friday prep")으로 **매주 금요일 오
 - routine에는 아직 Evernote MCP 커넥터가 연결되어 있지 않다(연결된 커넥터
   목록에 Google Drive/Gmail만 있고 Evernote가 없음). 커넥터가 연결되기 전까지는
   routine이 금요일마다 실행은 되지만 Evernote 도구 호출에 실패하고, 그 사실을
-  실행 로그에 명확히 남기도록 프롬프트에 지시해 뒀다. `claude.ai/customize/connectors`
-  에서 Evernote를 연결하면 별도 조치 없이 다음 실행부터 정상 동작한다.
+  실행 로그에 명확히 남기도록 프롬프트에 지시해 뒀다. 애초에 **Evernote MCP는
+  아직 공식 출시 전(대기자 명단 단계)이라 연결 자체가 불가능한 상태**다 — 자세한
+  내용은 10절 참고.
+- routine 프롬프트에는 Gmail 리마인더 스캔 단계(9.1절)가 추가되어 있다: 본문을
+  채우기 전 `mcp__gmail__search_threads`류 도구로 지난 15일 메일을 훑어 대상
+  주에 마감·일정이 있는 항목을 Urgent items에 추가로 넣는다. 단, routine은
+  클라우드에서 돌기 때문에 로컬 Mail.app(sejong.ac.kr, CERN 계정)은 스캔하지
+  못한다 — 그건 로컬 Claude Code 세션에서 이 스킬을 직접 실행할 때만 가능하다.
 
 ## 9. 이메일 리마인더 스캔 (Urgent items 자동 채움)
 
