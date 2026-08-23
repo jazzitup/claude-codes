@@ -148,7 +148,93 @@ routine, 이름 "Evernote weekly-todo Friday prep")으로 **매주 금요일 오
   실행 로그에 명확히 남기도록 프롬프트에 지시해 뒀다. `claude.ai/customize/connectors`
   에서 Evernote를 연결하면 별도 조치 없이 다음 실행부터 정상 동작한다.
 
-## 9. 개인정보 주의
+## 9. 이메일 리마인더 스캔 (Urgent items 자동 채움)
+
+노트 본문을 채울 때, 지난 15일간의 메일을 훑어서 **대상 주(일~토)에 마감/일정이
+있는 항목**을 찾아 메인 표의 해당 요일 행 체크리스트에 추가한다. 대상 계정은
+4개이며, 접근 방법이 계정마다 다르다:
+
+| 계정 | 주소 | 접근 방법 | 로컬 CLI | 클라우드 routine |
+|---|---|---|---|---|
+| Gmail | kingmking@gmail.com | `mcp__claude_ai_Gmail__search_threads` (claude.ai Gmail 커넥터) | 가능 | 가능 (이미 연결됨) |
+| sejong.ac.kr | yongsun@sejong.ac.kr | 로컬 Mail.app, AppleScript(`osascript`) | 가능 | **불가능** |
+| CERN | kimy@cern.ch (Exchange 계정) | 로컬 Mail.app, AppleScript(`osascript`) | 가능 | **불가능** |
+| iCloud | kingmking@icloud.com | (필요시) 로컬 Mail.app, AppleScript | 가능 | **불가능** |
+
+**중요한 제약**: 클라우드 routine(매주 금요일 자동 실행)은 Anthropic 클라우드
+샌드박스에서 돌기 때문에 사용자의 로컬 Mac이나 Mail.app에 전혀 접근할 수 없다.
+즉 sejong.ac.kr·CERN·iCloud 메일은 **이 스킬을 로컬 Claude Code 세션에서 직접
+실행할 때만** 스캔할 수 있고, 자동 금요일 routine은 Gmail만 스캔한다. 이
+비대칭은 실제 제약이니 사용자에게 숨기지 말고 그대로 알린다.
+
+### 9.1 Gmail 스캔 (로컬·클라우드 공통)
+
+```
+mcp__claude_ai_Gmail__search_threads({
+  query: "newer_than:15d in:inbox -category:promotions -category:social",
+  pageSize: 50
+})
+```
+결과 스니펫에서 날짜가 명시된(회의, 마감, 회신기한 등) 항목만 골라낸다. 광고성
+뉴스레터·보안 알림(2FA, 로그인 알림)·arXiv 데일리 다이제스트 등은 제외한다.
+
+### 9.2 sejong.ac.kr · CERN(Exchange) 스캔 (로컬 전용, AppleScript)
+
+로컬 세션에서는 Bash로 `osascript`를 호출해 Mail.app을 스크립팅한다. 계정별
+Inbox 메일박스 이름이 다르므로 (`mailbox "INBOX" of account "sejong.ac.kr"`,
+`mailbox "Inbox" of account "Exchange"` — "Exchange"가 실제로는 cern.ch
+Exchange 계정이다. 계정 표시 이름이 바뀌었을 수 있으니
+`tell application "Mail" to get name of every account`로 먼저 확인) 아래
+패턴으로 최근 15일 메일을 가져온다:
+
+```applescript
+set cutoffDate to (current date) - (15 * 24 * 60 * 60)
+tell application "Mail"
+  set mb to mailbox "INBOX" of account "sejong.ac.kr"
+  set msgs to (messages of mb whose date received > cutoffDate)
+  repeat with m in msgs
+    -- (date received of m), (sender of m), (subject of m)
+  end repeat
+end tell
+```
+
+메일함이 크면 출력이 매우 길어지므로(수백 통), 전체를 그대로 컨텍스트에 읽지
+말고 파일로 저장한 뒤 `grep -iE '요청|확인|deadline|due |meeting|마감|신청|제출|
+reminder|urgent'` 등으로 1차 필터링하고, 그중 **제목이나 본문에 구체적 날짜가
+박혀 있고 그 날짜가 대상 주(일~토) 안에 들어오는 것만** 최종 후보로 남긴다.
+같은 스레드의 반복 RE/FW는 최신 것 하나만 남기고, 단순 정보성 공지(뉴스레터,
+스팸 리포트, arXiv 다이제스트, 보안 알림)는 제외한다.
+
+### 9.3 Urgent items에 반영
+
+- 최종 후보 각각을, 마감/일정 날짜가 속한 요일 행의 체크리스트에 새 `<li>` 항목
+  으로 추가한다 (날짜를 특정할 수 없으면 넣지 않는다 — 애매한 항목을 억지로
+  아무 요일에나 넣지 않는다).
+- 항목 텍스트는 "[메일] <한 줄 요약> (출처: <발신자 또는 요약>)" 형태로, 원래
+  체크리스트 항목과 시각적으로 구분되게 한다.
+- 템플렛에서 이미 있는 반복 항목·오른쪽 참고 링크 칼럼은 절대 건드리지 않는다
+  — 이 단계는 순수 추가(additive)다.
+- 노트를 채운 뒤 사용자에게 "이메일에서 자동으로 추가한 항목" 목록을 요약해서
+  보여준다 (오탐이 있을 수 있으니 검토를 유도한다).
+
+## 10. Evernote MCP 연결 상태 (2026-08-23 기준)
+
+이 스킬이 실제로 Evernote에 쓰려면 Evernote MCP 연결이 필요한데, 현재 상황:
+
+- **공식 Evernote MCP 서버**(evernote.com/model-context-protocol/evernote-mcp-server)는
+  **아직 출시 전, 대기자 명단(waitlist) 단계**다. 정식 출시되면 claude.ai
+  커넥터로 붙일 수 있을 것으로 보인다.
+- 커뮤니티 대안(`github.com/brentmid/evernote-mcp-server`)이 존재하지만
+  **읽기 전용(read-only)** 이라 노트 생성/수정에는 쓸 수 없고, Evernote
+  Developer 계정(Consumer Key/Secret 발급) + OAuth 1.0a 인증이 필요해 설치도
+  간단하지 않다.
+- 따라서 **현재는 이 스킬이 Evernote에 직접 쓰기 작업을 수행할 방법이 없다.**
+  공식 서버가 출시되어 연결되기 전까지는, 이 스킬은 (a) 채워 넣을 본문을
+  준비해서 사용자에게 보여주고 (b) 사용자가 직접 Evernote에 붙여넣도록
+  안내하는 것까지만 할 수 있다. Evernote MCP가 연결되면 이 섹션과 프롬프트를
+  업데이트해서 다시 자동 쓰기로 전환한다.
+
+## 11. 개인정보 주의
 
 템플렛 노트의 오른쪽 참고 링크 칸에는 `evernote:///view/...` 형태의 개인 노트
 링크, 그리고 요일 칸의 반복 일정에는 실제 회의명·개인 zoom/indico 링크(비밀번호
