@@ -223,22 +223,43 @@ reminder|urgent'` 등으로 1차 필터링하고, 그중 **제목이나 본문�
 - 노트를 채운 뒤 사용자에게 "이메일에서 자동으로 추가한 항목" 목록을 요약해서
   보여준다 (오탐이 있을 수 있으니 검토를 유도한다).
 
-## 10. Evernote MCP 연결 상태 (2026-08-23 기준)
+## 10. Evernote MCP 연결 상태 (2026-08-23 업데이트)
 
-이 스킬이 실제로 Evernote에 쓰려면 Evernote MCP 연결이 필요한데, 현재 상황:
-
-- **공식 Evernote MCP 서버**(evernote.com/model-context-protocol/evernote-mcp-server)는
-  **아직 출시 전, 대기자 명단(waitlist) 단계**다. 정식 출시되면 claude.ai
-  커넥터로 붙일 수 있을 것으로 보인다.
-- 커뮤니티 대안(`github.com/brentmid/evernote-mcp-server`)이 존재하지만
-  **읽기 전용(read-only)** 이라 노트 생성/수정에는 쓸 수 없고, Evernote
-  Developer 계정(Consumer Key/Secret 발급) + OAuth 1.0a 인증이 필요해 설치도
-  간단하지 않다.
-- 따라서 **현재는 이 스킬이 Evernote에 직접 쓰기 작업을 수행할 방법이 없다.**
-  공식 서버가 출시되어 연결되기 전까지는, 이 스킬은 (a) 채워 넣을 본문을
-  준비해서 사용자에게 보여주고 (b) 사용자가 직접 Evernote에 붙여넣도록
-  안내하는 것까지만 할 수 있다. Evernote MCP가 연결되면 이 섹션과 프롬프트를
-  업데이트해서 다시 자동 쓰기로 전환한다.
+- **공식 Evernote MCP 서버가 출시됐다**: `https://mcp.evernote.com/mcp` (HTTP,
+  OAuth). 2026-08-23 이전 버전의 이 문서는 "아직 waitlist 단계"라고 적어뒀는데
+  그 사이 정식 출시된 것으로 보인다 — 과거 스냅샷을 과신하지 말 것(메모리/문서
+  일반에 해당하는 주의사항).
+- **로컬 Claude Code CLI 세션**에서는 다음으로 연결한다 (한 번만 하면 됨):
+  ```
+  claude mcp add --transport http evernote https://mcp.evernote.com/mcp
+  claude mcp login evernote
+  ```
+  `claude mcp login`은 OAuth 리다이렉트를 로컬에서 직접 받아야 해서 **진짜
+  인터랙티브 터미널**이 필요하다 — Claude Code 안에서 Bash 도구로 실행하거나
+  `!` 프리픽스로 실행해도 둘 다 "stdin isn't a terminal"로 실패한다. 사용자가
+  **Claude Code 밖의 순정 Terminal.app**에서 직접 실행해야 한다. 로그인 완료
+  후에는 **그 시점 이후 새로 시작된 세션**에서만 `mcp__evernote__*` 도구가
+  보인다 — 이미 떠 있던 세션은 도구 목록이 시작 시점에 고정되므로 재시작(또는
+  `claude --continue`로 재시작 후 이어붙이기)이 필요하다.
+- 스코프는 `read create write delete`로, 노트 생성/수정 전부 가능하다
+  (`create_note`, `edit_note`, `search_notes`, `search_notebooks`, `get_note`
+  등 — 커뮤니티 대안과 달리 읽기 전용이 아니다).
+- `edit_note`는 전체 본문을 다시 보내는 게 아니라 `append`/`prepend`/`replace`
+  중 하나로 ENML 조각만 보낸다. `replace`는 `find`가 노트 전체에서 정확히
+  한 번만 매치해야 하므로, 요일 라벨(Sun/Mon/...)처럼 고유한 텍스트를 앵커로
+  포함시켜야 한다. 새 노트를 한 번에 채울 때는 `create_note`(빈 노트 생성) →
+  `edit_note(mode:"append", content:<전체 본문 fragment>)` 한 번으로 끝내는
+  편이 7번의 개별 `replace`보다 간단하고 안전하다.
+- **클라우드 routine(매주 금요일 자동 실행)은 별개 연결 체계다.** 위의
+  `claude mcp login`은 이 Mac의 로컬 Claude Code 세션에만 적용되고, 클라우드
+  routine은 claude.ai 계정 커넥터(`https://claude.ai/customize/connectors`)
+  쪽에 Evernote가 연결돼야 그 routine의 `mcp_connections`에 붙일 수 있다.
+  2026-08-23 기준 routine 쪽에는 아직 붙어 있지 않다 — 로컬 연결과는 별도로
+  claude.ai 커넥터 페이지에서도 Evernote를 연결하고, `RemoteTrigger
+  action:"update"`로 routine의 `mcp_connections`에 evernote 커넥터를 추가하고
+  `allowed_tools`에 `mcp__evernote__*` 도구들을 넣어줘야 routine도 실제로
+  쓰기 작업을 할 수 있다. 그 전까지는 routine이 여전히 8절의 "Evernote 연결
+  안 됨" 경로를 탄다.
 
 ## 11. 개인정보 주의
 
