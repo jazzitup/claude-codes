@@ -106,9 +106,8 @@ O/X 항목에 사용자가 다른 표현으로 답하면(예: "했어", "못했�
 안에 있어서 기존 auto-pull/push 훅으로 모든 컴퓨터에 자동 동기화된다. 다만
 **SessionStart 훅 등록 자체(`~/.claude/settings.json`)는 컴퓨터마다 별도
 파일이라 git으로 동기화되지 않는다** — 새 컴퓨터에서 이 체크인이 자동으로
-뜨게 하려면 그 컴�다의 `~/.claude/settings.json`에도 아래 훅 항목을 한 번
+뜨게 하려면 그 컴퓨터의 `~/.claude/settings.json`에도 아래 훅 항목을 한 번
 추가해야 한다(직접 `update-config` 스킬을 쓰거나 이 파일 내용을 참고):
-
 
 ```json
 {
