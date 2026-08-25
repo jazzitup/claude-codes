@@ -1,14 +1,17 @@
 ---
 name: pennylane-codebook-notes
 description: >
-  Generate a detailed Korean lecture note (Google-Docs-paste-ready HTML,
-  formulas and diagrams rendered as real images) from one or more PennyLane
+  Generate a detailed Korean lecture note from one or more PennyLane
   Codebook topic pages, by reading every Theory-tab accordion sub-section
-  (What will you learn?, and each named theory section) in full. Use when
-  the user gives PennyLane Codebook URLs (pennylane.ai/codebook/...) and
-  asks for a lecture note / 강의노트 / summary of the Theory content.
-  Korean triggers: 페니레인 코드북, PennyLane 강의노트, 이론 탭 정리,
-  codebook 이론 읽어서 노트 만들어줘.
+  (What will you learn?, and each named theory section) in full. Default
+  output is Google-Docs-paste-ready HTML with formulas and diagrams
+  rendered as real images; if the target is Obsidian or another
+  markdown/KaTeX renderer, formulas are written as raw $$...$$ LaTeX
+  instead (diagrams still images) — see the "출력 대상이 Obsidian/마크다운일
+  때" section. Use when the user gives PennyLane Codebook URLs
+  (pennylane.ai/codebook/...) and asks for a lecture note / 강의노트 /
+  summary of the Theory content. Korean triggers: 페니레인 코드북, PennyLane
+  강의노트, 이론 탭 정리, codebook 이론 읽어서 노트 만들어줘.
 ---
 
 # PennyLane Codebook → 강의노트 생성기
@@ -17,6 +20,30 @@ description: >
 전부: "What will you learn?" + 각 이론 섹션)을 읽어서, 수식과 다이어그램을
 실제 이미지로 렌더링한 뒤, Google Docs에 그대로 복사-붙여넣기 할 수 있는
 자기완결형(self-contained) HTML 강의노트를 만든다.
+
+## 출력 대상이 Obsidian/마크다운일 때 — 수식을 이미지로 만들지 않는다
+
+아래 파이프라인 전체(특히 2단계 `render_formulas.py`, 5단계
+`embed_images.py`)는 **Google Docs가 LaTeX를 직접 렌더링하지 못한다는
+전제**로 수식을 pdflatex PNG로 박아넣는다. 하지만 사용자가 "옵시디언용",
+".md로 줘", "노트 앱에 붙여넣을 거야"처럼 대상이 Obsidian이나 다른
+마크다운 뷰어(KaTeX/MathJax 내장)임을 밝히면 얘기가 다르다 — 그런 뷰어는
+`$$...$$`(display) / `$...$`(inline) LaTeX 원문을 그 자체로 렌더링하므로:
+
+- **수식은 2·5단계를 건너뛰고 `.formula` 안에 `$$...$$` 원문 LaTeX를 그대로
+  쓴다.** 수식 번호가 필요하면 `\tag{n}`도 그대로 유지 — KaTeX는 `\tag`를
+  trust 옵션 없이도 지원한다.
+- **다이어그램(회로도, Bloch 구 등 실제 그림)은 그대로 이미지로 받아 넣는다**
+  — 3단계(`download_diagrams.py`)는 그대로 쓴다. 이미지가 필요한 건 수식이
+  아니라 진짜 그림이다.
+- 왜 중요한가 (2026-08-25 실제로 겪은 문제): Google-Docs용으로 만든 HTML
+  노트를 나중에 Obsidian `.md`로 변환했더니, pdflatex로 그려진 수식 PNG의
+  세리프체(Computer Modern)가 Obsidian 본문의 산세리프 폰트와 완전히
+  어긋나 보였다. 이미 이미지로 박힌 노트를 고치려면 PNG 50개를 하나하나
+  눈으로 읽어 LaTeX로 옮겨 적어야 했다 — 처음부터 대상이 Obsidian이었다면
+  이 작업 자체가 필요 없었다. **출력 형식은 사후에 바꾸기보다, 시작 시점에
+  대상(Google Docs vs. 마크다운 앱)을 먼저 확인하고 그에 맞는 파이프라인을
+  타는 것이 낫다.**
 
 ## 왜 headless 브라우저가 필요 없는가
 
