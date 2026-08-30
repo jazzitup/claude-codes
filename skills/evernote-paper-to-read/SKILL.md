@@ -1,6 +1,6 @@
 ---
 name: evernote-paper-to-read
-description: "사용자가 논문 링크(arXiv/저널/DOI 등, 여러 개 가능)를 주면 기존 Evernote 노트 'Quantum Sensing Radiative Decays of Neutrinos and Dark Matter Particles'와 같은 구조(paper 링크, title, authors, abstract, further reads)로 새 노트를 만들어 '04. Library' 스택의 '[T]To read' 노트북에 넣는다. 제목·저자·초록은 arXiv API/논문 페이지에서 실제 값을 그대로 가져오고 절대 지어내지 않으며, further reads는 실재하는 관련 논문만 검색해서 채운다. Evernote MCP(https://mcp.evernote.com/mcp)가 연결되어 있어야 동작한다 — 연결 방법은 [[evernote-weekly-todo]] 10절 참고. '이 논문 에버노트에 넣어줘', '이 arXiv 링크 투 리드에 추가해줘', '논문 라이브러리에 저장해줘', 'Library에 논문 추가' 요청 시 사용."
+description: "사용자가 논문 링크(arXiv/저널/DOI 등, 여러 개 가능)를 주면 기존 Evernote 노트 'Quantum Sensing Radiative Decays of Neutrinos and Dark Matter Particles'와 같은 구조(paper 링크, title, authors, abstract, further reads)로 새 노트를 만들고 논문 PDF를 다운로드해 첨부한 뒤 '04. Library' 스택의 '[T]To read' 노트북에 넣는다. 제목·저자·초록은 arXiv API/논문 페이지에서 실제 값을 그대로 가져오고 절대 지어내지 않으며, further reads는 실재하는 관련 논문만 검색해서 채운다. PDF는 원 링크가 유료/접근불가면 arXiv 등 오픈 액세스 버전에서 대신 받는다. Evernote MCP(https://mcp.evernote.com/mcp)가 연결되어 있어야 동작한다 — 연결 방법은 [[evernote-weekly-todo]] 10절 참고. '이 논문 에버노트에 넣어줘', '이 arXiv 링크 투 리드에 추가해줘', '논문 라이브러리에 저장해줘', 'Library에 논문 추가', 'PDF도 받아서 넣어줘' 요청 시 사용."
 ---
 
 # Evernote "읽을 논문" 노트 생성 (04. Library → [T]To read)
