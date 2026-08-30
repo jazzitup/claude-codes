@@ -94,7 +94,38 @@ further reads** 다. 이 스킬은 사용자가 새 논문 링크를 주면 같�
    깊이 이해하는 데 도움되는 것(핵심 선행연구, 방법론 원 논문, 직접적인
    후속연구)을 우선한다.
 
-## 6. 대상 노트북 찾기
+## 6. PDF 다운로드
+
+1. 논문 PDF를 스크래치패드 디렉터리에 받는다.
+   - arXiv 링크(또는 4단계에서 arXiv 대응본을 찾은 경우): `https://arxiv.org/pdf/<arXiv ID>`를
+     `curl -sL`로 받는다(`http://export.arxiv.org/...`처럼 리다이렉트가 걸리는
+     호스트가 있으니 `-L` 필수). 파일명은 `<제1저자 성_연도_논문제목 앞부분>.pdf`
+     처럼 알아보기 쉽게 짓는다.
+   - 논문 자체가 오픈 액세스 PDF를 직접 제공하면(예: Nature Communications,
+     PMC, 학회 무료 배포본) 그 링크를 받는다.
+   - **원래 사용자가 준 링크가 유료 저널 페이지라 PDF에 직접 접근할 수 없으면**
+     (APS/Elsevier/Springer 등에서 403/유료 안내가 뜨는 경우), WebSearch로 같은
+     논문의 arXiv/저자 공개본(author's accepted manuscript)이 있는지 찾아서
+     대신 그걸 받는다 — DOI나 논문 제목으로 검색하면 대개 찾을 수 있다. 그마저
+     없으면 PDF 첨부는 생략하고 6단계 이하는 건너뛰되, **왜 PDF를 못 받았는지
+     보고에 명시**한다(예: "저널판은 구독 필요, 오픈 액세스 사본도 못 찾음").
+2. `file`로 다운로드된 파일이 실제 PDF인지 확인한다(HTML 에러 페이지가 잘못
+   저장되는 경우가 있다 — `PDF document`가 아니면 실패로 간주하고 재시도하거나
+   생략).
+
+## 7. PDF 첨부
+
+Evernote 노트에 파일을 첨부하는 방식은 MCP 서버 스키마에 따라 다를 수 있으므로,
+**실행 시점에 실제 도구 스키마를 확인**한다(예: `mcp__evernote__create_note`나
+`mcp__evernote__edit_note`에 `resources`/`attachments`류 파라미터가 있는지,
+또는 별도의 `mcp__evernote__add_resource`류 도구가 있는지). 스키마가 파일 경로를
+받으면 6단계에서 받은 로컬 경로를 그대로 넘기고, base64 데이터를 요구하면
+인코딩해서 넘긴다. 노트 본문(ENML)에 `<en-media type="application/pdf" hash="..."/>`
+같은 참조가 필요한 방식이면, 참고 노트에도 PDF가 첨부돼 있는지 `get_note`로 확인해
+그 구조(첨부가 본문 안에 인라인으로 보이는지, 노트 하단에 별도로 붙는지)를 그대로
+따른다.
+
+## 8. 대상 노트북 찾기
 
 1. `mcp__evernote__search_notebooks`로 이름에 "To read"가 들어간 노트북을
    찾는다. 여러 개 후보가 나오면 `stack` 필드(또는 API가 제공하는 노트북
