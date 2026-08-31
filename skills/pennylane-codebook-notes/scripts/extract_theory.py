@@ -155,12 +155,18 @@ def extract_topic(url: str) -> dict:
             content_md = results.get(content_ref[1:], content_ref)
         else:
             content_md = content_ref
+        template_ref = e.get("codeTemplate")
+        if isinstance(template_ref, str) and template_ref.startswith("$") and template_ref[1:].isalnum():
+            template = results.get(template_ref[1:], template_ref)
+        else:
+            template = template_ref
+
         exercises.append({
             "slug": e.get("slug"),
             "title": e.get("title"),
             "content": content_md,
             "relatedTheorySlug": e.get("relatedTheorySlug"),
-            "codeTemplate": e.get("codeTemplate"),
+            "codeTemplate": template,
         })
 
     return {
