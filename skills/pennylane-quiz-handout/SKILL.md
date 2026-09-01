@@ -116,16 +116,40 @@ docstring만 봐도 복원 가능하다).
 
 문제 순서 = 사용자가 지정한 순서(보통 Codebook 번호 오름차순).
 
-## 5. 저장 위치 / 파일명
+## 5. 저장 위치 / 파일명 / 출력 포맷
 
+`.md`만으로는 이 사용자의 인쇄 워크플로에서 문제가 생겼다(2026-09-01,
+언더스코어 빈칸이 마크다운 뷰어에서 뭉개짐 + 애초에 "프린트가 안 됨").
+그래서 `.md`는 소스로 유지하되(편집하기 쉬움), 항상 **인쇄용 사본을 같이
+만든다**:
+
+1. 먼저 위 4절 구조대로 `.md`를 만든다 (경로: 아래).
+2. `.md` → `.docx` 변환:
+   ```bash
+   pandoc "<경로>/Quiz<N>_<날짜>.md" -o "<경로>/Quiz<N>_<날짜>.docx" --standalone
+   ```
+   pandoc이 `$$...$$` / `$...$` LaTeX 수식을 Word 네이티브 수식 객체(OMML)로,
+   ` ```python ` 코드 블록은 고정폭 폰트 스타일로 자동 변환해준다 — 별도
+   손질 필요 없음. **이 사용자의 Mac엔 Pages.app이 설치되어 있지 않다**
+   (2026-09-01 확인) — `.pages`를 직접 만들어달라고 하면 이 사실을 먼저
+   알리고, `.docx`(Pages/Word/Google Docs 어디서나 열림) 또는 PDF 중
+   무엇을 원하는지 물어본다. Pages가 나중에 설치되면 그 앱으로 `.docx`를
+   열어서 "다른 이름으로 저장 → Pages"로 바꿀 수 있다.
+3. 변환 후 `unzip -l`/`document.xml` 확인 등으로 수식이 실제로 `m:oMath`
+   객체로 들어갔는지, 이름/학번 빈칸 언더스코어 길이가 살아있는지 확인한다
+   (아래 6절 이스케이프 규칙을 지켰다면 문제 없음).
+4. 바로 인쇄가 필요하면 PDF도 추가로 만든다: `pandoc ... -o ...pdf`
+   (LaTeX 엔진이 없으면 `--pdf-engine=weasyprint` 등 설치된 엔진을 확인).
+
+경로:
 ```
-/Users/yongsunkim/Library/CloudStorage/GoogleDrive-kingmking@gmail.com/My Drive/개인서류 drive/수업 2026 fall 부터/수업 2026 fall/quiz/Quiz<N>_<YYYY-MM-DD>.md
+/Users/yongsunkim/Library/CloudStorage/GoogleDrive-kingmking@gmail.com/My Drive/개인서류 drive/수업 2026 fall 부터/수업 2026 fall/quiz/Quiz<N>_<YYYY-MM-DD>.{md,docx}
 ```
-(Google Drive가 로컬에 마운트되어 있으므로 `Write` 도구로 바로 이 경로에
-쓴다 — Drive MCP `create_file`을 거칠 필요 없음.) 날짜는 사용자가 말한
-시험 날짜(예: "Sept 3 2026" → `2026-09-03`)를 쓰고, 퀴즈 번호는 그 폴더에
-이미 있는 `QuizN_*.md` 중 가장 큰 N 다음 번호로 정한다(사용자가 명시하지
-않으면).
+(Google Drive가 로컬에 마운트되어 있으므로 `Write`/`pandoc` 출력 모두 바로
+이 경로에 쓴다 — Drive MCP `create_file`을 거칠 필요 없음.) 날짜는
+사용자가 말한 시험 날짜(예: "Sept 3 2026" → `2026-09-03`)를 쓰고, 퀴즈
+번호는 그 폴더에 이미 있는 `QuizN_*` 중 가장 큰 N 다음 번호로 정한다
+(사용자가 명시하지 않으면).
 
 ## 이름/학번 빈칸은 반드시 이스케이프한 언더스코어로
 
