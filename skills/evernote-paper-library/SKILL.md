@@ -151,32 +151,38 @@ Quantum info` 등, `A`~`J` 정도)이 있고, 각 섹션은 그 주제에 속한
    고정값이라 매번 같다). `mcp__evernote__edit_note(mode:"replace")`로
    반영.
 
-## 6. "Reading.." 섹션을 최근 15편으로 갱신
+## 6. "Reading.." 섹션 갱신 — **논문 노트를 하나라도 새로 만들면 매번 필수**
 
-1. 2단계에서 찾은 논문 라이브러리 notebookId로
-   `search_notes({query: "nbGuid:\"<notebookId>\"", sortBy: "created",
-   ascending: false, maxResults: 15})`를 돌려 **라이브러리 전체에서
-   가장 최근에 만든 15개 노트**(이번에 새로 만든 것 포함)를 가져온다.
-2. Babel 노트에서 현재 "Reading.." 섹션(`<h2>...Reading..</h2>` 바로
-   다음 `<ol>...</ol>`)을 읽어, 이미 체크(`<en-todo checked="true"
-   />`)된 항목이 있는지 확인한다 — **체크된 항목은 이미 읽은 것이므로
-   새 리스트에서 뺀다**(사용자가 직접 체크 → 다음 갱신 때 자동으로
-   빠지는 것이 이 규칙의 목적).
-3. 새 리스트를 구성한다: 1단계에서 가져온 순서(최신 우선)대로 넣되,
-   2단계에서 이미 체크된 것으로 확인된 노트는 건너뛰고, 15개가 될
-   때까지 그다음 최근 노트로 채운다(`maxResults`를 15보다 좀 크게, 예:
-   20~25로 늘려서 여유분을 확보해두면 편하다).
-4. 각 항목 형식(기존 D섹션 항목과 같은 링크 스타일 + 날짜 + 체크박스):
+이 단계는 "여러 편을 한꺼번에 정리할 때만" 하는 게 아니다. arXiv 링크
+하나만 받아서 노트 하나 만든 경우에도 **항상** 이어서 실행한다. 사용자가
+"Reading도 업데이트해"라고 다시 말하게 만들지 않는다.
+
+라이브러리가 notebookId 하나로 통일돼 있지 않을 수 있고(0.1절), 사용자가
+Reading 리스트를 직접 체크·재배열해 두었을 수도 있으므로, **매번
+전체를 다시 계산하지 않는다** — 대신 "지금 있는 리스트를 그대로 두고
+맨 위에 새 항목만 끼워 넣은 뒤, 15개를 넘으면 맨 아래(가장 오래된 것)를
+지운다":
+
+1. Babel 노트를 `get_note`로 **바로 직전에** 새로 읽는다(5단계에서 이미
+   읽었더라도, 사이에 시간이 좀 지났으면 다시 읽는다 — 0.1절의 실시간
+   편집 문제 때문에 오래된 사본으로 작업하면 다음 `edit_note`가 실패할
+   수 있다).
+2. `<h2>...Reading..</h2><ol>` 바로 뒤(첫 `<li>` 앞)에 새 노트의
+   항목을 삽입한다. `find`는 `<b>Reading..</b></h2><ol>` 정도의 짧고
+   고유한 문자열이면 충분하다(제목이 h2인지, 굵게 처리돼 있는지는 실제
+   내용 확인). 항목 형식(기존 항목들과 동일):
    ```
-   <li><div><a href="evernote:///view/<account>/<shard>/<노트GUID>/<노트북GUID>/" rel="noopener noreferrer" rev="en_rl_none"><span style="color:rgb(24, 168, 65);"><노트 제목></span></a><span style="color:rgb(24, 168, 65);"> (<Month D, YYYY>) </span><en-todo checked="false" /></div></li>
+   <li><div><a href="evernote:///view/<account>/<shard>/<새 노트 GUID>/<그 노트가 실제로 속한 노트북 GUID>/" rel="noopener noreferrer" rev="en_rl_none"><span style="color:rgb(24, 168, 65);"><노트 제목></span></a><span style="color:rgb(24, 168, 65);"> (<오늘 날짜, Month D, YYYY>) </span><en-todo checked="false" /></div></li>
    ```
-   날짜는 그 노트의 `createdAt`을 `Month D, YYYY` 형식(예: `August 31,
-   2026`)으로 변환한 값 — Babel 노트의 다른 섹션에서 실제로 쓰는
-   날짜 표기와 동일한 스타일이니 그대로 맞춘다.
-5. `mcp__evernote__edit_note(mode:"replace")`로 "Reading.." 섹션의
-   `<h2>...Reading..</h2><ol>...</ol>` 전체를 통째로 새 리스트로
-   교체한다(부분 추가가 아니라 매번 전체 재구성 — 순서·체크 상태
-   일관성을 위해).
+   `<account>/<shard>`는 Reading 리스트의 기존 항목에서 그대로 복사한다.
+3. 여러 편을 한 번에 추가하는 경우, 이 삽입을 논문마다 반복하되 항상
+   **가장 최근 것이 맨 위**가 되도록 순서를 맞춘다.
+4. Reading 리스트의 `<li>` 개수를 센다. 15개를 넘으면, 넘는 개수만큼
+   **리스트 맨 아래(가장 오래된 항목)부터** 통째로 지운다(그 `<li>...
+   </li>` 블록을 `find`로 잡아 `content:""`로 replace). 체크된
+   (`checked="true"`) 항목이 마침 맨 아래 쪽에 있어도 그냥 같이
+   지운다 — "체크된 건 다음 갱신 때 없어진다"는 규칙이 사용자가 직접
+   지우는 경우와 이 트림(trim) 두 가지로 모두 만족된다.
 
 ## 7. 검증 및 보고
 
