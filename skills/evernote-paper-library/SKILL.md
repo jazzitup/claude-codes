@@ -1,6 +1,6 @@
 ---
 name: evernote-paper-library
-description: "Claude가 리서치/토론 중에 추천하거나 논의한 논문 목록(직접 링크를 준 게 아니라 '이 논문들 저장해줘'처럼 대화 맥락에서 나온 여러 편)을 Evernote 논문 라이브러리에 일괄 정리한다. 논문마다 노트를 만들어 paper 링크/title/authors/abstract(전부 원문 그대로)와 Claude 자신의 설명(왜 관련 있는지, 대화에서 실제로 한 말)을 적고 PDF를 첨부한 뒤, 'La Bibliothèque de Babel' 노트의 해당 주제 섹션(A~J 등)에 링크를 걸고, 그 노트의 'Reading..' 섹션을 전체 라이브러리에서 가장 최근에 추가된 15편으로(최신이 위로, 이미 체크된=읽은 항목은 제외) 갱신한다. [[evernote-paper-to-read]]와 다른 점: 그 스킬은 사용자가 직접 준 링크 1개를 '[T] To read' 노트북에 4필드(paper/title/authors/abstract)로 저장하는 단순 케이스이고, 이 스킬은 여러 편을 한 번에, '설명' 필드까지 포함해서, 별도의 '논문 라이브러리' 노트북(La Bibliothèque de Babel과 짝을 이루는 곳)에 저장하고 Babel 색션·Reading 리스트까지 갱신하는 확장 케이스다. '이 논문들 에버노트에 저장해줘', '방금 추천한 논문들 라이브러리에 넣어줘', '바벨 도서관 D 섹션에 링크 걸어줘', 'Reading 리스트 갱신해줘' 요청 시 사용."
+description: "Claude가 리서치/토론 중에 추천·논의한 논문(대화 맥락에서 나온 여러 편) 또는 사용자가 준 arXiv 링크 하나를 Evernote 논문 라이브러리에 정리한다. 논문마다 노트를 만들어 paper 링크/title/authors/abstract(전부 원문 그대로)와 Claude 자신의 설명(왜 관련 있는지)을 적고 PDF를 첨부한 뒤, 'La Bibliothèque de Babel' 노트의 해당 주제 섹션(A~J 등)에 링크를 걸고, **그 노트의 'Reading..' 섹션도 매번 예외 없이 함께 갱신**(새 노트를 맨 위에 추가, 15개 넘으면 가장 오래된 것부터 제거)한다 — Reading 갱신은 이 스킬의 선택 단계가 아니라 논문 노트를 하나라도 새로 만들면 항상 따라붙는 필수 단계다. [[evernote-paper-to-read]]와 다른 점: 그 스킬은 링크 1개를 '[T] To read' 노트북에 4필드로 저장하는 단순 케이스이고, 이 스킬은 '설명' 필드까지 포함해서 '논문 라이브러리' 노트북(La Bibliothèque de Babel과 짝을 이루는 곳)에 저장하고 Babel 섹션·Reading 리스트까지 갱신하는 확장 케이스다(1편이든 여러 편이든 이 스킬 사용). '이 논문 라이브러리에 저장해줘', '이 논문들 에버노트에 저장해줘', '바벨 도서관 D 섹션에 링크 걸어줘', 'Reading 리스트도 업데이트해', '앞으로 여기도 항상 업데이트해' 요청 시 사용."
 ---
 
 # Evernote 논문 라이브러리 일괄 정리 (paper note + Babel 링크 + Reading 리스트)
