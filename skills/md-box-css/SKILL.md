@@ -136,8 +136,9 @@ class와 겹치지 않는 새 색을 고른다. 2026-09-07에 histbox는 보라 
 ## 5. 검증
 
 ```bash
-grep -c 'class="histbox"' "$FILE"    # 수정 전과 개수 같은지
-grep -n '<style>\|</style>' "$FILE"  # 태그 짝이 맞는지 (여는/닫는 각 1개)
+grep -c 'class="histbox"' "$FILE"                      # 수정 전과 개수 같은지
+cat "$VAULT/.obsidian/appearance.json"                 # 스니펫이 enabledCssSnippets에 들어갔는지
+ls "$VAULT/.obsidian/snippets/"                        # css 파일이 실제로 생겼는지
 ```
 
 가능하면 Obsidian에서 실제로 열어 라이트/다크 모드를 둘 다 토글해보고
