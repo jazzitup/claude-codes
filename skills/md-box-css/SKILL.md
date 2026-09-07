@@ -4,10 +4,12 @@ description: >
   Turn unstyled semantic `<div class="...">` sections in a lecture-note
   markdown file (e.g. `histbox` "과학사 한 장면" boxes from the
   lecture-history-enrich skill, or `goalbox`/`exbox`/`solbox` from
-  pennylane-codebook-notes) into visually bordered boxes, by adding a
-  `<style>` block at the top of the .md file — Obsidian renders raw HTML
-  including `<style>` tags inside notes, so this is enough with no plugin
-  needed. Use when the user points at a specific kind of section in an
+  pennylane-codebook-notes) into visually bordered boxes, via an Obsidian
+  CSS snippet placed in `<vault>/.obsidian/snippets/` and enabled in
+  `appearance.json` — NOT an inline `<style>` tag in the note itself
+  (Obsidian's Reading View strips those, confirmed 2026-09-07 when that
+  approach silently did nothing). Use when the user points at a specific
+  kind of section in an
   existing lecture-note .md/.html and asks to "네모 쳐줘" / "박스로 만들어줘"
   / "박스 형태로 바꿔" / "테두리 넣어줘", especially when the classes are
   already present in the file but render as plain unstyled text because no
