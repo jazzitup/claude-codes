@@ -46,7 +46,88 @@ grep -n 'class="hist' "$FILE"                 # histbox 계열이면 이렇게
 새로 만든다. `grep -c 'class="histbox"'`로 박스 개수를 세어두면, 나중에
 수정 후 개수가 그대로인지(실수로 지운 게 없는지) 검증할 수 있다.
 
-## 2. 노트 안에 `<style>` 태그를 직접 넣지 않는다 — Obsidian CSS 스니펫을 쓴다
+## 2. 먼저 div 구조 자체가 "한 덩어리 HTML 블록"인지 확인한다 — 아니면 CSS를 붙여도 소용없다
+
+⚠️ **가장 중요한 함정 (2026-09-07에 실제로 겪음)**: CSS 스니펫을 켰는데도
+박스가 안 보이고, 위쪽에 **텅 빈 색깔 박스 하나**만 뜨고 그 아래로 사진·
+이름·본문이 스타일 하나도 없이 줄줄이 흘러나오는 증상이 나면 — CSS
+문제가 아니라 **HTML이 여러 조각으로 쪼개져서 렌더링된 것**이다.
+
+CommonMark(Obsidian 포함 대부분의 마크다운 렌더러)의 HTML 블록 규칙은:
+*여는 태그로 시작한 줄 다음에 빈 줄이 오면, 그 HTML 블록은 거기서
+끝난다.* `pennylane-codebook-notes` 계열 노트는 아래처럼 각 div를
+빈 줄로 감싸는 관습을 쓰는데,
+
+```
+<div class="histbox">
+
+<div class="histportrait">
+
+![이름](data:image/jpeg;base64,...)
+...
+</div>
+
+</div>
+```
+
+이건 pandoc 같은 도구에서는 "빈 줄 다음엔 마크다운을 이어서 파싱하고,
+짝 맞는 `</div>`를 만나면 다시 합친다"는 확장 문법으로 잘 동작하지만,
+Obsidian의 렌더러는 그렇게 관대하지 않다. 실제로는 `<div class="histbox">`
+바로 뒤의 빈 줄에서 그 블록이 즉시(내용 없이) 끝나버리고, 이어지는
+`<div class="histportrait">`, `![이미지]()`, `<div class="name">`,
+`</div>` 들이 전부 **따로따로** 파싱된다 — 그 결과 스타일이 걸린
+`histbox`는 자식이 하나도 없는 빈 상자로, 나머지는 그냥 평범한 문단으로
+렌더링된다. 스크린샷으로 이 증상을 정확히 확인할 수 있다: 위쪽에 빈
+보라색 상자, 그 아래 스타일 없는 사진+텍스트.
+
+**해결책: 그 div 블록 전체를 빈 줄 없이 한 줄(또는 최소한 빈 줄이
+전혀 없는 연속된 여러 줄)로 압축**해서, 파서가 처음부터 끝까지 하나의
+HTML 블록으로 인식하게 만든다. 이 경우 블록 내부는 더 이상 마크다운으로
+처리되지 않으므로, 안에 있던 마크다운 문법도 같이 HTML로 바꿔줘야 한다:
+
+- `![이름](data:image/...;base64,XXXX)` → `<img src="data:image/...;base64,XXXX" alt="이름">`
+- `이름\` + 줄바꿈 + `(연도)` (마크다운 줄바꿈) → `이름<br>(연도)`
+- 빈 줄로 나뉜 본문 문단들 → 문단마다 `<p>...</p>`로 감싸기
+- `*기울임*` → `<em>기울임</em>` (본문 안에 게이트 이름 등을 이탤릭으로
+  쓴 경우가 많으므로 빠뜨리지 않는다)
+- `**굵게**`가 있다면 `<strong>굵게</strong>`로
+
+파일에 base64 이미지가 많아 손으로 편집하기 어려우므로, **Python
+정규식으로 각 박스의 구조를 통째로 매칭해서 재조립**하는 게 안전하다
+(base64 문자열 자체는 캡처 그룹으로만 다루고 절대 다시 타이핑하지
+않는다):
+
+```python
+import re
+
+single_pat = re.compile(
+    r'<div class="histbox">\n\n'
+    r'<div class="histportrait">\n\n'
+    r'!\[([^\]]+)\]\(data:image/jpeg;base64,([A-Za-z0-9+/=]+)\)\n\n'
+    r'<div class="name">\n\n([^\\\n]+)\\\n\(([^)]+)\)\n\n</div>\n\n</div>\n\n'
+    r'<div class="histbody">\n\n<div class="histtitle">\n\n([^\n]+)\n\n</div>\n\n'
+    r'(.*?)\n\n</div>\n\n</div>',
+    re.DOTALL,
+)
+
+def repl(m):
+    alt, b64, name, years, title, body = m.groups()
+    paras = "".join(f"<p>{p.strip()}</p>" for p in body.strip().split("\n\n") if p.strip())
+    return (f'<div class="histbox"><div class="histportrait">'
+            f'<img src="data:image/jpeg;base64,{b64}" alt="{alt}">'
+            f'<div class="name">{name}<br>({years})</div></div>'
+            f'<div class="histbody"><div class="histtitle">{title}</div>{paras}</div></div>')
+
+text = re.sub(single_pat, repl, text)
+```
+
+여러 초상(`histportrait-group`)이 있는 박스는 패턴을 하나 더 만들어야
+한다(포틀레이트 블록을 두 번 반복). **먼저 스크래치패드의 임시 파일에
+써서 결과를 검증**(치환 전/후 `class="histbox"` 개수가 같은지,
+`<div>`/`</div>` 개수가 정확히 같은지, `diff`로 박스 구간 밖은 전혀
+안 바뀌었는지)하고 나서 실제 파일에 적용한다.
+
+## 3. 노트 안에 `<style>` 태그를 직접 넣지 않는다 — Obsidian CSS 스니펫을 쓴다
 
 ⚠️ **2026-09-07에 실제로 틀렸던 접근**: 처음엔 `.md` 파일 맨 위에
 `<style>...</style>` 블록을 그냥 끼워 넣었는데, Obsidian Reading
