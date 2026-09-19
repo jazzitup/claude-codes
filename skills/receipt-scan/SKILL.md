@@ -1,6 +1,6 @@
 ---
 name: receipt-scan
-description: Convert a receipt photo (HEIC/JPG/etc) into a PNG named "<금액>원_<YYYY.MM.DD>.png" by reading the total payment amount and date off the receipt image. Use when the user gives one or more receipt image file paths and asks to process/rename/organize them as receipts, or says "영수증 스캔 처리" / "영수증 파일 정리".
+description: Convert a receipt photo (HEIC/JPG/etc) into a PNG named "<YYYY.MM.DD>_<금액>원.png" (date first, amount second — confirmed 2026-09-19) by reading the total payment amount and date off the receipt image. Use when the user gives one or more receipt image file paths and asks to process/rename/organize them as receipts, or says "영수증 스캔 처리" / "영수증 파일 정리".
 ---
 
 # Receipt Scan Processing
