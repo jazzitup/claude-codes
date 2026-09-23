@@ -61,16 +61,56 @@ description: "세종대학교 그룹웨어 전자결재(sjgw.sejong.ac.kr) 미�
 
 결재대기함의 각 행에 대해 반복한다:
 
-1. 제목 링크(`link " <제목>"`)를 클릭해서 문서를 연다.
-   - 어떤 문서는 같은 화면 안에서 "문서조회" 뷰로 전환되고, 어떤 문서는
-     **새 팝업 창**으로 열린다(문서 양식에 따라 다름 — 실제 확인됨:
-     "표준기안문"류는 같은 창, "여행계획서"류는 새 창). 클릭 직후
-     `list_pages`로 새 페이지가 생겼는지 확인하고, 생겼으면
-     `select_page`로 그 페이지로 전환한다.
-2. 문서 상단 툴바에서 "결재" 버튼을 클릭한다.
-3. "요약전이 있습니다. 확인하시겠습니까?" 같은 안내 모달이 뜨면 "닫기"를
-   눌러 문서 본문 화면으로 그대로 진행한다(요약전을 볼 필요는 없음).
-4. 문서 본문 화면에서 다시 "결재" 버튼을 클릭하면 **"결재 처리" 모달**이
+1. **제목 링크를 열 때 `click(uid)`를 바로 쓰지 않는다.** 이 그리드는
+   한 행에 아이콘/제목/기안자 링크가 촘촘히 붙어 있어서, 스냅샷의 제목
+   링크 uid를 `click`으로 눌러도 실제로는 바로 아래 **기안자("OOO /
+   부서") 링크에 포커스가 가면서 인물카드 팝업만 뜨고 문서는 안 열리는
+   경우가 실제로 확인됐다** (2026-09-23 라이브 테스트에서 3번 연속
+   재현). 제목이 아니라 기안자를 잘못 누르면 승인 액션 없이 엉뚱한
+   팝업만 반복되므로, 아래 JS 기반 방법을 대신 쓴다:
+   - `evaluate_script`로 `command=listTodo`가 URL에 포함된 iframe을
+     찾는다(중첩 iframe을 재귀로 탐색: `main.jsp` →
+     `userContents.jsp` → `XClickController?...command=listTodo`).
+   - 그 프레임 안의 `<a>` 태그들 중, 제목 텍스트의 **앞부분 글자 하나를
+     뺀 나머지 일부**(예: 제목이 " [Academic Advisor] ..."로 시작하면
+     "Academic Advisor"처럼 대괄호 다음부터)를 `textContent.indexOf(...)
+     !== -1`로 찾아 그 `<a>` 엘리먼트를 `.click()`한다. **제목 텍스트
+     맨 앞에 일반 공백이 아닌 non-breaking space(U+00A0)가 붙어있어서
+     맨 앞 글자를 포함해 매칭하면 실패한다** — 반드시 대괄호나 그 이후
+     글자로 매칭한다.
+   - 예시 스크립트:
+     ```js
+     () => {
+       function findFrame(win, depth) {
+         if (depth > 8) return null;
+         try { if (win.location.href.includes('command=listTodo')) return win; } catch(e) { return null; }
+         for (let i=0;i<win.frames.length;i++) {
+           const r = findFrame(win.frames[i], depth+1);
+           if (r) return r;
+         }
+         return null;
+       }
+       const target = findFrame(window, 0);
+       if (!target) return {error: 'frame not found'};
+       const links = Array.from(target.document.querySelectorAll('a'));
+       const link = links.find(a => (a.textContent||'').indexOf('<제목의 앞부분 대괄호 이후 키워드>') !== -1);
+       if (!link) return {error: 'link not found'};
+       link.click();
+       return {clicked: true, text: link.textContent};
+     }
+     ```
+   - 클릭 후 `list_pages`로 새 페이지("문서조회")가 열렸는지 확인하고
+     `select_page`로 전환한다. 이 절차에서는 매번 **새 팝업 창**으로
+     열렸다(실제 URL 패턴: `XClickController?instanceId=...&isPopup=true...`).
+     문서 양식에 따라 같은 탭 안에서 뷰가 바뀌는 경우도 이론적으로
+     있을 수 있으니, 새 페이지가 안 보이면 현재 페이지에서 스냅샷을
+     다시 찍어 "문서조회"로 바뀌었는지 확인한다.
+   - "결재", "닫기" 같은 **툴바 버튼은 좌표 기반 `click(uid)`로 눌러도
+     문제없이 동작한다** — 문제가 되는 건 리스트의 제목 링크 하나뿐이다.
+2. 문서 페이지가 열리면 "요약전 보기" 같은 안내 화면이 먼저 나올 수
+   있다(별도 팝업 모달이 아니라 문서 뷰 안에 바로 나온 경우도 있었음).
+   화면 하단의 "확인" 버튼을 눌러 실제 문서 본문 화면으로 넘어간다.
+3. 문서 본문 화면 툴바에서 "결재" 버튼을 클릭하면 **"결재 처리" 모달**이
    뜬다. 모달 구성:
    - 문서제목: 자동 기재됨(확인만)
    - 처리구분: 결재 / 반려 / 보류 라디오 — **기본값 "결재"를 그대로
