@@ -1,7 +1,7 @@
 #!/bin/bash
 # Control+Option+Command+S: Schwartz QFT PDF 두 개(원본 + copy)를 Preview로 열어 배치한다.
 #   모니터 2대 이상: 원본 = 가장 왼쪽 모니터 전체, copy = 가장 오른쪽 모니터의 왼쪽 절반
-#   모니터 1대:      원본 = 왼쪽 절반, copy = 오른쪽 절반
+#   모니터 1대:      원본 하나만 열어 화면 전체
 D="$HOME/Library/CloudStorage/Dropbox/Books and lectures"
 NA="Schwartz Quantum_Field_Theory_and_the_Standard_Model_by_Schwartz_M.D._z-lib.org.pdf"
 NB="Schwartz Quantum_Field_Theory_and_the_Standard_Model_by_Schwartz_M.D._z-lib.org copy.pdf"
@@ -22,15 +22,14 @@ function run(argv) {
     const r = box(scr[scr.length - 1]);
     bB = [r[0], r[1], Math.round((r[0] + r[2]) / 2), r[3]];
   } else {
-    const r = box(scr[0]), m = Math.round((r[0] + r[2]) / 2);
-    bA = [r[0], r[1], m, r[3]]; bB = [m, r[1], r[2], r[3]];
+    bA = box(scr[0]); bB = null;   // 한 개만 열어 전체화면
   }
   const P = Application('Preview');
   P.activate();
-  P.open(Path(pA)); P.open(Path(pB));
+  P.open(Path(pA)); if (bB) P.open(Path(pB));
   const win = n => P.windows().find(w => w.name().startsWith(n));
-  for (let i = 0; i < 40 && !(win(nA) && win(nB)); i++) delay(0.25);
+  for (let i = 0; i < 40 && !(win(nA) && (!bB || win(nB))); i++) delay(0.25);
   const set = (w, b) => { if (w) w.bounds = {x: b[0], y: b[1], width: b[2] - b[0], height: b[3] - b[1]}; };
-  set(win(nA), bA); set(win(nB), bB);
+  set(win(nA), bA); if (bB) set(win(nB), bB);
 }
 JXA

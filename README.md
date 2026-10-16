@@ -85,4 +85,4 @@ any Mac that pulls this repo gets them automatically.
 
 - **Control+Option+Command+S** — `qft_layout.sh`: opens the Schwartz QFT PDF and its
   copy in Preview; original fills the leftmost monitor, copy takes the left
-  half of the rightmost monitor (single screen: left/right halves).
+  half of the rightmost monitor (single screen: only the original, filling the screen).
