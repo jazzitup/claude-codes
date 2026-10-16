@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shift+Option+S: Schwartz QFT PDF 두 개(원본 + copy)를 Preview로 열어 배치한다.
+# Control+Option+Command+S: Schwartz QFT PDF 두 개(원본 + copy)를 Preview로 열어 배치한다.
 #   모니터 2대 이상: 원본 = 가장 왼쪽 모니터 전체, copy = 가장 오른쪽 모니터의 왼쪽 절반
 #   모니터 1대:      원본 = 왼쪽 절반, copy = 오른쪽 절반
 D="$HOME/Library/CloudStorage/Dropbox/Books and lectures"

@@ -1,10 +1,10 @@
 #!/bin/bash
 # ~/claude-codes/mac-shortcuts 의 단축키를 이 Mac에 설치한다 (멱등, SessionStart 훅에서 호출됨).
-#   Shift+Option+S -> qft_layout.sh (Schwartz QFT PDF 두 창 배치)
+#   Control+Option+Command+S -> qft_layout.sh (Schwartz QFT PDF 두 창 배치)
 [ "$(uname)" = Darwin ] || exit 0
 HERE="$(cd "$(dirname "$0")" && pwd)"
 NAME="QFT 두 창 배치"
-KEY='~$s'                      # ~ = Option, $ = Shift
+KEY='^~@s'                     # ^ = Control, ~ = Option, @ = Command
 W="$HOME/Library/Services/$NAME.workflow"
 STAMP="$W/Contents/.installed-$(shasum "$0" | cut -c1-12)"
 [ -f "$STAMP" ] && exit 0      # 이미 이 버전으로 설치됨

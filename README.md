@@ -83,6 +83,6 @@ idempotent and runs at every Claude Code session start through
 `scripts/session-start-setup.sh` (called from the evernote check-in hook), so
 any Mac that pulls this repo gets them automatically.
 
-- **Shift+Option+S** — `qft_layout.sh`: opens the Schwartz QFT PDF and its
+- **Control+Option+Command+S** — `qft_layout.sh`: opens the Schwartz QFT PDF and its
   copy in Preview; original fills the leftmost monitor, copy takes the left
   half of the rightmost monitor (single screen: left/right halves).
