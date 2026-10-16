@@ -74,3 +74,15 @@ commit + push that bump. Both are scheduled daily via macOS LaunchAgents
 `scripts/update-*.log`. Claude Code re-reads skill files at the start of
 every session, so no separate "reload" step is needed beyond starting a new
 session after the pull.
+
+## Mac shortcuts (auto-installed)
+
+`mac-shortcuts/install.sh` installs macOS keyboard shortcuts as Automator
+Quick Actions (`~/Library/Services`) bound via `pbs NSServicesStatus`. It is
+idempotent and runs at every Claude Code session start through
+`scripts/session-start-setup.sh` (called from the evernote check-in hook), so
+any Mac that pulls this repo gets them automatically.
+
+- **Shift+Option+S** — `qft_layout.sh`: opens the Schwartz QFT PDF and its
+  copy in Preview; original fills the leftmost monitor, copy takes the left
+  half of the rightmost monitor (single screen: left/right halves).
