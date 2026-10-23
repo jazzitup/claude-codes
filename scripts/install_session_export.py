@@ -37,9 +37,15 @@ def hook_group_has_command(group_list, substring):
     return False
 
 
+SESSION_EXPORT_MARKERS = ("session_export.py", "export-session-to-obsidian")
+
+
 def ensure_hook(settings, event, command, status_message, timeout):
     groups = settings.setdefault("hooks", {}).setdefault(event, [])
-    if hook_group_has_command(groups, "session_export.py"):
+    # Skip install if this machine already runs ANY session-export mechanism
+    # (ours or the equivalent export-session-to-obsidian.py/.sh one), so the
+    # two never both fire and double-write the same Obsidian export file.
+    if any(hook_group_has_command(groups, m) for m in SESSION_EXPORT_MARKERS):
         return False
     groups.append(
         {
