@@ -4,3 +4,5 @@ __pycache__/
 venv/
 _build/
 scripts/update-hwpxskill.log
+scripts/update-academic-search.log
+skills/synced/
