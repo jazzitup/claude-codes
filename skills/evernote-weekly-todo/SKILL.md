@@ -1,6 +1,6 @@
 ---
 name: evernote-weekly-todo
-description: "사용자의 Evernote에서 'weekly todo's' 계열 노트(제목이 'June 4', 'July 3', 'August 2'처럼 <월 이름> <주차번호>인 노트)를 새 주차용으로 만든다. 전용 템플렛 노트(제목이 'weekly todo template ...'이고 attributes.isTemplate:true)를 찾아 표 구조를 그대로 옮기고, 대상 주의 일~토 날짜를 표 안에 채워 넣는다. 2026-08-24부터 표는 2개(Routine 표 + Motto/Urgent items 표)로 간소화됐다 — 매일 오늘 칸(공복 유지/공부 시간/조깅)을 채우는 건 별도 [[evernote-daily-checkin]] 스킬이 세션 시작마다 자동으로 한다. 지난 15일간의 메일(Gmail + 로컬 Mail.app의 sejong.ac.kr/CERN 계정)을 훑어 대상 주에 마감·일정이 있는 항목을 Urgent items 체크리스트에 자동으로 추가한다. Evernote MCP(https://mcp.evernote.com/mcp)가 로컬 Claude Code 세션에 연결되어 있으면 실제로 노트를 생성/수정한다 — 연결 상태·설정 방법은 10절 참고. 매주 금요일 오전 9시(KST)에 claude.ai 예약 routine으로도 자동 실행된다(단, routine은 Gmail만 스캔 가능하고, 별도로 클라우드 커넥터에도 Evernote가 연결되어 있어야 함 — 10절). '이번 주 위클리 투두 노트 만들어줘', '<월> <N>주차 노트 만들어', 'weekly todo 다음 주 걸로 만들어줘', 'X월 X일 템플렛 써서 넣어줘', '메일 확인해서 리마인더 넣어줘' 요청 시 사용."
+description: "사용자의 Evernote에서 'weekly todo's' 계열 노트(제목이 'June 4', 'July 3', 'August 2'처럼 <월 이름> <주차번호>인 노트)를 새 주차용으로 만든다. 전용 템플렛 노트(제목이 'weekly todo template ...'이고 attributes.isTemplate:true)를 찾아 표 구조를 그대로 옮기고, 대상 주의 일~토 날짜를 표 안에 채워 넣는다. 2026-08-24부터 표는 2개(Routine 표 + Motto/Urgent items 표)로 간소화됐다 — 매일 오늘 칸(공복 유지/아침/요코하마 선언)을 채우는 건 별도 [[evernote-daily-checkin]] 스킬이 세션 시작마다 자동으로 한다. 지난 15일간의 메일(Gmail + 로컬 Mail.app의 sejong.ac.kr/CERN 계정)을 훑어 대상 주에 마감·일정이 있는 항목을 Urgent items 체크리스트에 자동으로 추가한다. Evernote MCP(https://mcp.evernote.com/mcp)가 로컬 Claude Code 세션에 연결되어 있으면 실제로 노트를 생성/수정한다 — 연결 상태·설정 방법은 10절 참고. 매주 금요일 오전 9시(KST)에 claude.ai 예약 routine으로도 자동 실행된다(단, routine은 Gmail만 스캔 가능하고, 별도로 클라우드 커넥터에도 Evernote가 연결되어 있어야 함 — 10절). '이번 주 위클리 투두 노트 만들어줘', '<월> <N>주차 노트 만들어', 'weekly todo 다음 주 걸로 만들어줘', 'X월 X일 템플렛 써서 넣어줘', '메일 확인해서 리마인더 넣어줘' 요청 시 사용. 그 주 노트가 이미 있으면 새로 만들지 않고, 이메일·All time reminder에서 새로 생긴 항목만 추가하는 업데이트 모드로 돈다(3절)."
 ---
 
 # Evernote 주간(Weekly) Todo 노트 생성
@@ -70,7 +70,18 @@ def week_title(sunday_date):
 확인하고,
 - 이미 빈 노트가 있으면 그 GUID로 바로 5단계(본문 채우기)로 넘어간다.
 - 없으면 `mcp__evernote__create_note({title: "<월> <N>", notebookId})`로 새로
-  만든다 (본문은 비어서 생성됨).
+  만든다 (본문은 비어서 생성됨). 새 노트는 본문이 `<en-note></en-note>`로
+  완전히 비어 있어서 `replace`로 찾을 앵커가 없다 — `mode:"append"`로 채운다.
+- **이미 내용이 채워진 노트가 있으면(2026-10-25부터)** 멈추지 말고 **업데이트
+  모드**로 진행한다: 템플렛을 다시 쓰지 않고, 9절(이메일)과 9.4절(All time
+  reminder)을 똑같이 스캔한 뒤, 그 주 날짜에 해당하는 항목 중 **노트에 아직
+  없는 것만** 해당 요일 칸에 추가한다(6.1절 정렬 규칙 유지). 이미 같은 일정이
+  있는지는 텍스트를 그대로 비교하지 말고 의미로 판단한다(예: "[메일] XOC 미팅
+  21:00"과 사용자가 직접 적은 "XOC 미팅 9pm"은 같은 항목). 사용자가 직접 적은
+  항목·체크 표시·Routine 표 값은 절대 지우거나 고치지 않는다 — 순수
+  추가(additive)만 한다. 편집은 요일 칸마다 그 요일 라벨이 포함된 앵커로
+  `edit_note(mode:"replace")`. 새로 추가할 게 없으면 노트를 건드리지 않고
+  "새 항목 없음"이라고만 알린다.
 
 ## 4. 표 구조 이해
 
@@ -83,8 +94,12 @@ def week_title(sunday_date):
 1. **Routine 표** — 8칸(빈 라벨 칸 + Sun~Sat) 헤더 다음에 항목별로
    한 행씩 온다(요일별이 아니라 **항목별** 행이다):
    - `전날 밤 공복 유지` 행 — 7개 요일 칸, 값은 `O`(했음)/`X`(안 했음)
-   - `아침 공부 시간` 행 — 7개 요일 칸, 값은 `시:분` 형식(예: `1:30`)
-   - `밤 조깅` 행 — 7개 요일 칸, 값은 `O`/`X`
+   - `아침` 행 — 7개 요일 칸, 값은 그날 아침에 한 일을 짧은 자유 텍스트로
+     (예: `푹 잠`, `슬라이드 30분`)
+   - `요코하마 선언` 행 — 7개 요일 칸, 값은 `O`/`X`
+
+   (2026-10 기준 템플렛 'weekly todo template Sept. 1, 2026'의 행 구성.
+   그 전엔 `아침 공부 시간`(시:분)·`밤 조깅`(O/X) 행이었다.)
 
    **날짜를 넣지 않는다** — 이 표는 그 주가 진행되면서 매일 채워지는 표다
    (자동 채움 대상). 새 주 노트를 만들 때는 템플렛에서 그대로 빈 칸으로
