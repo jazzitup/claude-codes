@@ -86,3 +86,7 @@ any Mac that pulls this repo gets them automatically.
 - **Control+Option+Command+S** — `qft_layout.sh`: opens the Schwartz QFT PDF and its
   copy in Preview; original fills the leftmost monitor, copy takes the left
   half of the rightmost monitor (single screen: only the original, filling the screen).
+- **iTerm2 Ctrl+A / Ctrl+E with Korean input**: `iterm2_korean_ctrl.sh` adds
+  physical-key `GlobalKeyMap` bindings so Ctrl+A/E still send `0x01`/`0x05`
+  when the input source is Korean, and sets `LanguageAgnosticKeyBindings`. It also
+  runs from `session-start-setup.sh`. It takes effect after restarting iTerm2 (⌘Q).
