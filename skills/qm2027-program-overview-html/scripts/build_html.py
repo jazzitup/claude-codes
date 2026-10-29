@@ -44,10 +44,12 @@ table.items th{text-align:left;padding:6px 8px;color:var(--muted);font-size:.74r
 table.items td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
 tr.row-primary > td{background:var(--primary-bg);}
 tr.row-secondary > td{background:var(--secondary-bg);}
-td.num{text-align:right;font-variant-numeric:tabular-nums;width:3.2rem;}
-td.idcol{font-variant-numeric:tabular-nums;width:4.5rem;}
-td.titlecol{max-width:0;width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-table.items{table-layout:fixed;}
+td.num{text-align:right;font-variant-numeric:tabular-nums;width:1%;white-space:nowrap;padding-right:4px;}
+td.idcol{font-variant-numeric:tabular-nums;width:1%;white-space:nowrap;padding-left:4px;padding-right:4px;}
+td.titlecol{white-space:normal;}
+.title-line{font-weight:500;}
+.meta-line{margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.meta-line .collab-name{font-size:.82rem;color:var(--muted);}
 .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;font-weight:600;}
 .pill.theory{background:color-mix(in srgb, var(--theory) 18%, transparent);color:var(--theory);}
 .pill.experiment{background:color-mix(in srgb, var(--experiment) 18%, transparent);color:var(--experiment);}
@@ -88,9 +90,10 @@ def render_item(track_code, idx, item):
 <tr class="{section_cls}">
   <td class="num">{esc(item['rank'])}</td>
   <td class="idcol">{esc(item['id'])}</td>
-  <td class="titlecol" title="{esc(title)}">{esc(title)}</td>
-  <td>{cat_pill(cat)}</td>
-  <td>{esc(collab)}</td>
+  <td class="titlecol">
+    <div class="title-line">{esc(title)}</div>
+    <div class="meta-line">{cat_pill(cat)}{f'<span class="collab-name">{esc(collab)}</span>' if collab else ''}</div>
+  </td>
   <td><button class="toggle" onclick="toggleDetail('{detail_id}')">abstract ▾</button></td>
 </tr>"""
 
@@ -124,7 +127,7 @@ def render_item(track_code, idx, item):
 
     detail = f"""
 <tr class="detail-row" id="{detail_id}">
-  <td colspan="6">
+  <td colspan="4">
     <div class="detail-title">#{esc(item['id'])} — {esc(title)}</div>
     {''.join(fields)}
     <div class="detail-body">{nl2br(body) if body else '<i>(abstract text not found)</i>'}</div>
@@ -155,7 +158,7 @@ def render_track(t):
   <span><span class="legend-swatch" style="background:var(--secondary-bg)"></span>Secondary ({len(secondary)})</span>
 </div>
 <table class="items">
-<thead><tr><th>Rank</th><th>Id</th><th>Title</th><th>Category</th><th>Collaboration</th><th></th></tr></thead>
+<thead><tr><th>Rank</th><th>Id</th><th>Title, Category, Collaboration</th><th></th></tr></thead>
 <tbody>
 {''.join(rows_html)}
 </tbody>
