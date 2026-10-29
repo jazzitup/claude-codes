@@ -46,6 +46,8 @@ tr.row-primary > td{background:var(--primary-bg);}
 tr.row-secondary > td{background:var(--secondary-bg);}
 td.num{text-align:right;font-variant-numeric:tabular-nums;width:3.2rem;}
 td.idcol{font-variant-numeric:tabular-nums;width:4.5rem;}
+td.titlecol{max-width:0;width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+table.items{table-layout:fixed;}
 .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;font-weight:600;}
 .pill.theory{background:color-mix(in srgb, var(--theory) 18%, transparent);color:var(--theory);}
 .pill.experiment{background:color-mix(in srgb, var(--experiment) 18%, transparent);color:var(--experiment);}
@@ -81,25 +83,25 @@ def render_item(track_code, idx, item):
     section_cls = 'row-primary' if item['section'] == 'primary' else 'row-secondary'
     cat = item.get('category_pdf') or item.get('category_sheet') or ''
     collab = item.get('collaboration') or ''
+    title = item.get('title') or item.get('title_sheet') or ''
     row = f"""
 <tr class="{section_cls}">
   <td class="num">{esc(item['rank'])}</td>
   <td class="idcol">{esc(item['id'])}</td>
+  <td class="titlecol" title="{esc(title)}">{esc(title)}</td>
   <td>{cat_pill(cat)}</td>
   <td>{esc(collab)}</td>
   <td><button class="toggle" onclick="toggleDetail('{detail_id}')">abstract ▾</button></td>
 </tr>"""
 
-    title = item.get('title') or item.get('title_sheet') or ''
     authors = item.get('authors') or ''
-    presenter = item.get('presenter') or ''
+    presenter = collab if collab else (item.get('presenter') or '')
     affiliation = item.get('affiliation_sheet') or ''
     body = item.get('body') or ''
     score = item.get('score') or ''
     merge_with = item.get('merge_with') or ''
     comment = item.get('comment') or ''
     leading = item.get('leading_talk') or ''
-    loc = item.get('loc_confirm') or ''
     status = item.get('status') or ''
 
     fields = []
@@ -113,8 +115,6 @@ def render_item(track_code, idx, item):
         fields.append(f"<div class='detail-field'><b>Score</b>{esc(score)}</div>")
     if leading:
         fields.append(f"<div class='detail-field'><b>Leading Talk</b>{esc(leading)}</div>")
-    if loc:
-        fields.append(f"<div class='detail-field'><b>LOC Confirm</b>{esc(loc)}</div>")
     if merge_with:
         fields.append(f"<div class='detail-field'><b>Merge suggestion</b>{esc(merge_with)}</div>")
     if comment:
@@ -124,7 +124,7 @@ def render_item(track_code, idx, item):
 
     detail = f"""
 <tr class="detail-row" id="{detail_id}">
-  <td colspan="5">
+  <td colspan="6">
     <div class="detail-title">#{esc(item['id'])} — {esc(title)}</div>
     {''.join(fields)}
     <div class="detail-body">{nl2br(body) if body else '<i>(abstract text not found)</i>'}</div>
@@ -155,7 +155,7 @@ def render_track(t):
   <span><span class="legend-swatch" style="background:var(--secondary-bg)"></span>Secondary ({len(secondary)})</span>
 </div>
 <table class="items">
-<thead><tr><th>Rank</th><th>Id</th><th>Category</th><th>Collaboration</th><th></th></tr></thead>
+<thead><tr><th>Rank</th><th>Id</th><th>Title</th><th>Category</th><th>Collaboration</th><th></th></tr></thead>
 <tbody>
 {''.join(rows_html)}
 </tbody>
