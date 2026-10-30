@@ -90,3 +90,20 @@ any Mac that pulls this repo gets them automatically.
   physical-key `GlobalKeyMap` bindings so Ctrl+A/E still send `0x01`/`0x05`
   when the input source is Korean, and sets `LanguageAgnosticKeyBindings`. It also
   runs from `session-start-setup.sh`. It takes effect after restarting iTerm2 (⌘Q).
+
+## Time-activated pending tasks (`pending-tasks/`)
+
+Drop a markdown file in `pending-tasks/` with a header
+
+```
+---
+from_epoch: <utc epoch>
+until_epoch: <utc epoch>
+---
+```
+
+and `scripts/pending-tasks-hook.sh` (called from the SessionStart hook
+`scripts/evernote-daily-checkin-hook.sh`) injects its body into every new
+Claude Code session that starts inside that window — on any machine that has
+pulled this repo and registered that SessionStart hook. When done, move the
+file to `pending-tasks/done/` and push so other machines stop seeing it.
