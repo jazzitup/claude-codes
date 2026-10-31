@@ -62,7 +62,9 @@ Gmail MCP `search_threads` 로 `(항공사명 OR 편명) newer_than:120d` 검색
    - **Send boarding passes** → "Send by email in PDF format" 체크 → 이메일 칸이 예약 이메일로
      **대문자로 미리 채워져 있음** → `type` 하면 뒤에 붙어 "valid email" 오류 → `form_input` 으로
      값을 통째로 바꾼 뒤 Send → Overview 에 "Boarding passes were successfully sent".
-   - Manage baggage 는 보기만(위탁 수하물은 티켓 규정대로 공항 bag drop).
+   - **Manage baggage**: "Hold baggage — N bags included, N× 23kg" 와 Checked bags 카운터(기본 0).
+     사용자가 부칠 가방 수만큼 **+** 로 올리고(포함 수량 안이면 무료) **Confirm**. 포함 수량을 넘기면
+     결제로 이어지므로 멈춘다. 실제 가방은 공항 bag drop 에서 맡긴다.
 3. 보고: 좌석, 탑승 시각, 터미널, 탑승권 저장 경로·이메일 발송 여부, 공항 도착 권장
    (수하물 있으면 출발 3시간 전 카운터 오픈, 40분 전 마감).
 4. 뒷정리: pending-tasks 파일이 있었으면 `pending-tasks/done/` 으로 `git mv` + commit + push.
