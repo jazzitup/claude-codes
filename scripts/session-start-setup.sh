@@ -3,4 +3,8 @@
 "$HOME/claude-codes/mac-shortcuts/install.sh" >/dev/null 2>&1
 "$HOME/claude-codes/mac-shortcuts/iterm2_korean_ctrl.sh" >/dev/null 2>&1
 python3 "$HOME/claude-codes/scripts/install_session_export.py" >/dev/null 2>&1
+# One-shot cross-machine actions (see README "pending-actions/"); each exits at once when already done.
+for a in "$HOME/claude-codes/pending-actions"/*.sh; do
+  [ -f "$a" ] && bash "$a" >/dev/null 2>&1 &
+done
 exit 0
