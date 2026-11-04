@@ -107,3 +107,13 @@ and `scripts/pending-tasks-hook.sh` (called from the SessionStart hook
 Claude Code session that starts inside that window — on any machine that has
 pulled this repo and registered that SessionStart hook. When done, move the
 file to `pending-tasks/done/` and push so other machines stop seeing it.
+
+## One-shot cross-machine actions (`pending-actions/`)
+
+Same idea, but a shell script instead of a prompt: every `pending-actions/*.sh`
+is run (in the background) by `scripts/session-start-setup.sh` at each
+SessionStart on every machine that has this repo. A script must be idempotent
+(check for its own result and exit immediately when done), because it keeps
+running until you move it to `pending-actions/done/` and push.
+`scripts/session-jsonl-to-md.py` renders session `.jsonl` transcripts to a
+full-text Markdown file for actions that need to export a session log.
