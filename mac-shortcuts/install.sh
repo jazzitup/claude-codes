@@ -1,16 +1,19 @@
 #!/bin/bash
 # ~/claude-codes/mac-shortcuts 의 단축키를 이 Mac에 설치한다 (멱등, SessionStart 훅에서 호출됨).
-#   Control+Option+Command+S -> qft_layout.sh (Schwartz QFT PDF 두 창 배치)
+#   Control+Option+Command+S -> qft_layout.sh              (Schwartz QFT PDF 두 창 배치)
+#   Shift+Command+R          -> keynote_dissolve_buildin.sh (Keynote: 선택 객체에 Build In > Dissolve)
+# 각 단축키는 Automator Quick Action(~/Library/Services/<이름>.workflow)으로 만들고
+# pbs NSServicesStatus 에 key_equivalent 를 써서 바인딩한다 (^ = Control, ~ = Option, $ = Shift, @ = Command).
 [ "$(uname)" = Darwin ] || exit 0
 HERE="$(cd "$(dirname "$0")" && pwd)"
-NAME="QFT 두 창 배치"
-KEY='^~@s'                     # ^ = Control, ~ = Option, @ = Command
-W="$HOME/Library/Services/$NAME.workflow"
-STAMP="$W/Contents/.installed-$(shasum "$0" | cut -c1-12)"
-[ -f "$STAMP" ] && exit 0      # 이미 이 버전으로 설치됨
 
-rm -rf "$W"; mkdir -p "$W/Contents"
-cat > "$W/Contents/Info.plist" <<PLIST
+install_service() {           # install_service "<서비스 이름>" "<key_equivalent>" "<스크립트 파일명>"
+  local NAME="$1" KEY="$2" SCRIPT="$HERE/$3"
+  local W="$HOME/Library/Services/$NAME.workflow"
+  local STAMP="$W/Contents/.installed-$(cat "$0" "$SCRIPT" | shasum | cut -c1-12)"
+  [ -f "$STAMP" ] && return 0  # 이미 이 버전으로 설치됨
+  rm -rf "$W"; mkdir -p "$W/Contents"
+  cat > "$W/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict><key>NSServices</key><array><dict>
@@ -19,7 +22,7 @@ cat > "$W/Contents/Info.plist" <<PLIST
 <key>NSRequiredContext</key><dict/>
 </dict></array></dict></plist>
 PLIST
-cat > "$W/Contents/document.wflow" <<PLIST
+  cat > "$W/Contents/document.wflow" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -35,7 +38,7 @@ cat > "$W/Contents/document.wflow" <<PLIST
  <key>ActionBundlePath</key><string>/System/Library/Automator/Run Shell Script.action</string>
  <key>ActionName</key><string>Run Shell Script</string>
  <key>ActionParameters</key><dict>
-  <key>COMMAND_STRING</key><string>"$HERE/qft_layout.sh"</string>
+  <key>COMMAND_STRING</key><string>"$SCRIPT"</string>
   <key>CheckedForUserDefaultShell</key><true/>
   <key>inputMethod</key><integer>0</integer>
   <key>shell</key><string>/bin/bash</string>
@@ -65,7 +68,16 @@ cat > "$W/Contents/document.wflow" <<PLIST
 </dict>
 </dict></plist>
 PLIST
-defaults write pbs NSServicesStatus -dict-add "\"(null) - $NAME - runWorkflowAsService\"" "{ enabled_context_menu = 1; enabled_services_menu = 1; key_equivalent = \"$KEY\"; }"
-/System/Library/CoreServices/pbs -flush >/dev/null 2>&1
-/System/Library/CoreServices/pbs -update >/dev/null 2>&1
-touch "$STAMP"
+  defaults write pbs NSServicesStatus -dict-add "\"(null) - $NAME - runWorkflowAsService\"" "{ enabled_context_menu = 1; enabled_services_menu = 1; key_equivalent = \"$KEY\"; }"
+  touch "$STAMP"
+  CHANGED=1
+}
+
+CHANGED=0
+install_service "QFT 두 창 배치"        '^~@s' qft_layout.sh
+install_service "Keynote Dissolve 빌드인" '$@r'  keynote_dissolve_buildin.sh
+if [ "$CHANGED" = 1 ]; then
+  /System/Library/CoreServices/pbs -flush >/dev/null 2>&1
+  /System/Library/CoreServices/pbs -update >/dev/null 2>&1
+fi
+exit 0

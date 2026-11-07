@@ -86,6 +86,10 @@ any Mac that pulls this repo gets them automatically.
 - **Control+Option+Command+S** — `qft_layout.sh`: opens the Schwartz QFT PDF and its
   copy in Preview; original fills the leftmost monitor, copy takes the left
   half of the rightmost monitor (single screen: only the original, filling the screen).
+- **Shift+Command+R (Keynote)** — `keynote_dissolve_buildin.sh`: adds a **Build In >
+  Dissolve** effect to the selected object(s) by UI-scripting the Animate inspector
+  (Keynote has no menu item for it). Needs Accessibility permission for
+  WorkflowServiceRunner once per Mac. Details: `mac-shortcuts/keynote_dissolve_buildin.md`.
 - **iTerm2 Ctrl+A / Ctrl+E with Korean input**: `iterm2_korean_ctrl.sh` adds
   physical-key `GlobalKeyMap` bindings so Ctrl+A/E still send `0x01`/`0x05`
   when the input source is Korean, and sets `LanguageAgnosticKeyBindings`. It also
