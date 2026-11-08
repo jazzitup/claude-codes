@@ -62,3 +62,8 @@ window_kst: 2026-11-08 ~ 2026-11-22
 - Apple ID 암호·암호 입력 대행, 결제 정보 입력 금지.
 - "나의 iPhone 찾기"가 켜진 상태에서 지우지 말 것(활성화 잠금).
 - 백업 여부를 묻지 않고 지우지 말 것.
+
+## 완료 기록 (2026-11-08 11:17, Mac mini 세션)
+- 백업: `/Volumes/Seagate Hub/iphone5s 백업 2026-11-08/` — Photos_DCIM(사진 1466 JPG + 12 MOV + 6 PNG, 1.1GB, pymobiledevice3 afc pull) + MobileSync(idevicebackup2 전체 백업 4423파일 3.6GB, Backup Successful) + ipsw/.
+- 복원: Finder GUI 자동화는 접근성 권한 없어 실패 → `pymobiledevice3 restore update --erase -i <ipsw>` (venv ~/.venvs/pymd3)로 진행. 서명 중인 최종 버전은 12.5.7이 아니라 **12.5.8 (16H88)** 이었음(ipsw.me API로 확인, sha1 검증). 11:08 시작 → 11:16 완료(8분). 재부팅 후 ProductVersion 12.5.8 확인.
+- "나의 iPhone 찾기"는 lockdownd `IsAssociated`가 true로 나왔으나 사용자가 "iCloud 연동 자체가 안 되어 있다"고 해서 진행함.
